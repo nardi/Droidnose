@@ -5,10 +5,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import nl.nardilam.droidnose.datetime.Day;
 import nl.nardilam.droidnose.datetime.Time;
 import nl.nardilam.droidnose.datetime.TimePeriod;
@@ -29,37 +27,6 @@ public abstract class Timetable implements Serializable
     	this.eventList = new ArrayList<Event>(events);
         this.updateLog = new HashMap<Day, Time>();
         this.lastFullUpdate = null;
-        
-        if (this.eventList.size() > 1)
-        {
-        	/*
-        	 * Sommige Activities zijn identiek op alle gebieden behalve de locatie.
-        	 * Om deze goed weer te geven voegen we ze hier samen.
-        	 */
-	        for (int i = 0; i < this.eventList.size() - 1; i++)
-	        {
-	        	Event e1 = this.eventList.get(i);
-	        	Event e2 = this.eventList.get(i + 1);
-	        	if (e1.startTime.equals(e2.startTime)
-	        		&& e1.endTime.equals(e2.endTime)
-	        		&& e1.course.equals(e2.course)
-	        		&& e1.type.equals(e2.type))
-	        	{
-	        		Set<String> staffSet = new HashSet<String>();
-	        		staffSet.addAll(e1.staff);
-	        		staffSet.addAll(e2.staff);
-	        		Event mergedEvent = new Event(e1.startTime,
-	        				e1.endTime,
-	        				e1.course,
-	        				e1.type,
-	        				e1.location + ", " + e2.location,
-	        				staffSet);
-	        		this.eventList.remove(i + 1);
-	        		this.eventList.remove(i);
-	        		this.eventList.add(i, mergedEvent);
-	        	}
-	        }
-        }
         
         this.sort();
     }
@@ -95,6 +62,10 @@ public abstract class Timetable implements Serializable
     	}
     }
     
+    /*
+     * Maakt een filter om alleen de Activities voor bepaalde dagen te downloaden.
+     * Nog niet af.
+     */
     protected String makeDateFilter(List<Day> daysToUpdate)
     {
     	StringBuilder dateFilter = new StringBuilder();

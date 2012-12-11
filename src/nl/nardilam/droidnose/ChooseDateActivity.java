@@ -15,7 +15,6 @@ import android.widget.CalendarView;
 import android.widget.DatePicker;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-import android.widget.ScrollView;
 
 public class ChooseDateActivity extends Activity
 {

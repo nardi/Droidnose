@@ -1,7 +1,5 @@
 package nl.nardilam.droidnose.gui;
 
-import android.R.bool;
-import android.R.integer;
 import android.content.Context;
 import android.view.MotionEvent;
 import android.view.View;
@@ -31,8 +29,6 @@ public abstract class StepScrollView extends HorizontalScrollView
 				{
 					double stepPosition = (double)stepScrollView.getScrollX() / stepScrollView.stepSize;
 					double distanceFromCurrentStep = stepPosition - stepScrollView.currentStep;
-					//int stepDiff = (int)(Math.signum(distanceFromCurrentStep) *
-					//		Math.max(1, Math.round(Math.abs(distanceFromCurrentStep))));
 					int stepDiff = (int)(Math.signum(distanceFromCurrentStep) *
 							Math.ceil(Math.abs(distanceFromCurrentStep)));
 					

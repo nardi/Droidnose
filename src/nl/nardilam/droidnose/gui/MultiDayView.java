@@ -1,9 +1,7 @@
 package nl.nardilam.droidnose.gui;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import nl.nardilam.droidnose.Event;
 import nl.nardilam.droidnose.Orientation;
 import nl.nardilam.droidnose.Timetable;
@@ -51,6 +49,10 @@ public class MultiDayView extends TimeLayout
 		this.dayList = new ArrayList<Day>();
 		this.dayViews = new ArrayList<DayView>();
 		
+		/*
+		 * Als er dingen voor negenen of na vijfen gebeuren,
+		 * moet de HourView hiervan op de hoogte zijn om zich uit te breiden
+		 */
 		int startHour = TimeLayout.DEFAULT_STARTHOUR,
 			endHour =  TimeLayout.DEFAULT_ENDHOUR;
 		for (Event e : timetable.getEvents())
@@ -63,7 +65,7 @@ public class MultiDayView extends TimeLayout
 			double endTime = day.startTime.timeTo(e.endTime).inHours();
 			endHour = (int)Math.max(endHour, Math.round(endTime));
 		}
-		this.setHourRange(startHour, endHour);
+		hourView.setHourRange(startHour, endHour);
 	}
 	
 	private void setStartDay(Day day)
@@ -109,22 +111,6 @@ public class MultiDayView extends TimeLayout
 				lastDay = lastDay.add(1);
 				this.dayList.add(lastDay);
 			}
-			
-			/* Day prevDay = this.startDay.add(-1);
-			for (int i = 0; i < daysOnScreen; i++)
-			{
-				prevDay = this.getNextNonEmptyDay(prevDay, -1);
-				this.dayList.add(0, prevDay);
-				prevDay = prevDay.add(-1);
-			}
-			
-			Day currentDay = this.startDay;
-			for (int i = 0; i < 2 * daysOnScreen; i++)
-			{
-				currentDay = this.getNextNonEmptyDay(currentDay, 1);
-				this.dayList.add(currentDay);
-				currentDay = currentDay.add(1);
-			} */
 			
 			Context context = this.getContext();
 			LayoutParams dayParams = new LayoutParams(this.dayWidth, LayoutParams.WRAP_CONTENT);

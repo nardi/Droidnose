@@ -13,21 +13,15 @@ import android.widget.LinearLayout;
  */
 public class TimetableView extends LinearLayout
 {	
-	private final Timetable timetable;
-	private final Day day;
-	
 	private LinearLayout hourLayout = null;
 	private DateTitleView dummyDateView = null;
 	private HourView hourView = null;
-	private DayView dayView = null;
+	private MultiDayView dayView = null;
 	
 	public TimetableView(Context context, Timetable timetable, Day day)
 	{
 		super(context);
-		
-		this.timetable = timetable;
-		this.day = day;
-		
+
 		this.setOrientation(Orientation.HORIZONTAL);
 		
 		hourLayout = new LinearLayout(context);
@@ -43,7 +37,7 @@ public class TimetableView extends LinearLayout
 		hourView = new HourView(context, TimeLayout.DEFAULT_STARTHOUR, TimeLayout.DEFAULT_ENDHOUR);
 		hourLayout.addView(hourView);
 		
-		MultiDayView dayView = new MultiDayView(context, timetable, day, hourView);
+		dayView = new MultiDayView(context, timetable, day, hourView);
 		hourView.addHourHeightListener(dayView);
 		this.addView(dayView);
 	}
