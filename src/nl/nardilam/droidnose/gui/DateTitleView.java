@@ -19,7 +19,7 @@ import android.widget.TextView;
  */
 public class DateTitleView extends TextView
 {
-	private static final DateFormat dayFormat = new SimpleDateFormat("EEEE dd MMMM");
+	private static final DateFormat dayFormat = new SimpleDateFormat("EEEE d MMMM");
 	private static final int padding = Utils.dipToPx(8);
 	
 	public DateTitleView(final Context context, final Day day)

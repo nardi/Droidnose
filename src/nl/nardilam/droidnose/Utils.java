@@ -29,19 +29,4 @@ public class Utils
 	{
 		return Math.max(Math.round(dips * displayMetrics.density), 1);
 	}
-	
-	/* public static int dipToPx(int dips)
-	{
-		return Math.round(dips * (displayMetrics.widthPixels * displayMetrics.heightPixels / (displayMetrics.density*displayMetrics.density*800*480)));
-	}
-	
-	public static int dipToPx(int dips)
-	{
-		return dipToPx(dips, 0);
-	}
-	
-	public static int dipToPx(int dips, float scalability)
-	{
-		return Math.round(dips * (displayMetrics.density + scalability*(displayMetrics.widthPixels * displayMetrics.heightPixels / (800*480))) / (1 + scalability));
-	} */
 }

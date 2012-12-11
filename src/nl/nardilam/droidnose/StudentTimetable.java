@@ -6,9 +6,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import android.content.Context;
@@ -16,8 +13,6 @@ import android.content.Context;
 import nl.nardilam.droidnose.datetime.Day;
 import nl.nardilam.droidnose.datetime.Duration;
 import nl.nardilam.droidnose.datetime.Time;
-import nl.nardilam.droidnose.datetime.TimePeriod;
-import nl.nardilam.droidnose.datetime.TimeUtils;
 import nl.nardilam.droidnose.datetime.Week;
 import nl.nardilam.droidnose.datetime.WeekDay;
 import nl.nardilam.droidnose.json.JSONException;
@@ -100,13 +95,16 @@ public class StudentTimetable extends Timetable
     		{
 				Map<String, JSONValue> activity = value.asObject();
 				
-				// Locaties tijdelijk uitgeschakeld vanwege grote aantal requests
-				String location = "SP G1.8";
-				/* DatanoseQuery locationsByActivity = new DatanoseQuery("GetLocationsByActivity?id="
+				/*
+				 * Locaties ophalen kost erg veel requests en tijd, kan
+				 * waarschijnlijk sneller als batchrequest gedaan worden
+				 */
+				String location = "nog onbekende locatie";
+				DatanoseQuery locationsByActivity = new DatanoseQuery("GetLocationsByActivity?id="
 						+ (int)activity.get("ID").asNumber());
 				List<JSONValue> locations = locationsByActivity.query();
 				if (!locations.isEmpty())
-					location = locations.get(0).asObject().get("Name").asString(); */
+					location = locations.get(0).asObject().get("Name").asString();
     			
 				EventType type = EventType.parse(activity.get("ActivityType").asString());
 				

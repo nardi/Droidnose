@@ -38,24 +38,6 @@ public class TimeLayout extends LinearLayout
 		return this.hourHeight;
 	}
 	
-	public void setWidth(int width)
-	{
-		ViewGroup.LayoutParams params = this.getLayoutParams();
-		if (params == null)
-			params = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-		params.width = width;
-		this.setLayoutParams(params);
-	}
-	
-	protected void setHeight(int height)
-	{
-		ViewGroup.LayoutParams params = this.getLayoutParams();
-		if (params == null)
-			params = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-		params.height = height;
-		this.setLayoutParams(params);
-	}
-	
 	protected void update()
 	{
 	}

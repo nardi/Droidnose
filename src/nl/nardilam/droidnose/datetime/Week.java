@@ -4,6 +4,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 import java.util.TimeZone;
 
 public class Week extends TimePeriod
@@ -14,21 +15,27 @@ public class Week extends TimePeriod
 	public final int number;
 	public final TimeZone timeZone;
 	
+	private final Calendar calendar;
+	
+	/*
+	 * Om dingen wat te versimpelen maken we weken locale-onafhankelijk.
+	 */
+	private static void neutralizeCalendar(Calendar calendar)
+	{
+		calendar.setFirstDayOfWeek(Calendar.MONDAY);
+		calendar.setMinimalDaysInFirstWeek(2);
+	}
+	
 	/*
 	 * Beetje vreemde constructie omdat super in de eerste expressie van de constructor aangeroepen moet worden.
 	 * Kan nog verbeterd worden.
 	 */
 	
-	private final Calendar calendar;
-	
 	private static Calendar makeCalendar(int year, int number, TimeZone tz)
 	{
 		Calendar calendar = Calendar.getInstance(tz);
 		calendar.clear();
-		/*
-		 * Om dingen te versimpelen definiëren we een week altijd als maandag - zondag
-		 */
-		calendar.setFirstDayOfWeek(Calendar.MONDAY);
+		neutralizeCalendar(calendar);
 		calendar.set(Calendar.YEAR, year);
 		calendar.set(Calendar.WEEK_OF_YEAR, number);
 		return calendar;
@@ -82,7 +89,6 @@ public class Week extends TimePeriod
 	public Day getDay(WeekDay day)
 	{
 		Calendar dayCalendar = (Calendar)calendar.clone();
-		dayCalendar.setFirstDayOfWeek(Calendar.MONDAY);
 		dayCalendar.add(Calendar.DAY_OF_WEEK, day.ordinal());
 		return Day.fromCalendar(dayCalendar);
 	}
@@ -95,7 +101,7 @@ public class Week extends TimePeriod
 	public static Week fromCalendar(Calendar calendar)
 	{
 		Calendar c = (Calendar)calendar.clone();
-		c.setFirstDayOfWeek(Calendar.MONDAY);
+		neutralizeCalendar(c);
 		return new Week(c.get(Calendar.YEAR), c.get(Calendar.WEEK_OF_YEAR), c.getTimeZone());
 	}
 	
@@ -103,7 +109,7 @@ public class Week extends TimePeriod
 	{
 		Date date = format.parse(week);
 		Calendar calendar = Calendar.getInstance(format.getTimeZone());
-		calendar.setFirstDayOfWeek(Calendar.MONDAY);
+		neutralizeCalendar(calendar);
 		calendar.setTime(date);
 		return fromCalendar(calendar);
 	}

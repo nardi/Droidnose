@@ -3,19 +3,21 @@ package nl.nardilam.droidnose;
 import nl.nardilam.droidnose.datetime.Day;
 import nl.nardilam.droidnose.datetime.Time;
 import nl.nardilam.droidnose.datetime.TimeUtils;
+import nl.nardilam.droidnose.gui.LoadingView;
 import nl.nardilam.droidnose.gui.TimetableView;
 import android.os.Bundle;
-import android.os.StrictMode;
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.text.Editable;
 import android.text.InputType;
+import android.text.TextWatcher;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.view.inputmethod.InputMethodManager;
@@ -69,6 +71,10 @@ public class TimetableActivity extends Activity
 		}
 	}
 	
+	/*
+	 * Deze methode wordt bij hervatten van de applicatie aangeroepen
+	 * om indien nodig het rooster opnieuw te downloaden 
+	 */
 	public void onWindowFocusChanged(boolean hasFocus)
 	{
 		super.onWindowFocusChanged(hasFocus);
@@ -130,6 +136,21 @@ public class TimetableActivity extends Activity
         input.setInputType(InputType.TYPE_CLASS_PHONE);
         if (this.currentState.enteredStudentId != null)
         	input.setText(this.currentState.enteredStudentId);
+        input.addTextChangedListener(new TextWatcher()
+		{
+			public void afterTextChanged(Editable s)
+			{
+				activity.currentState.enteredStudentId = s.toString();
+			}
+			
+			public void onTextChanged(CharSequence s, int start, int before, int count)
+			{
+			}
+			
+			public void beforeTextChanged(CharSequence s, int start, int count, int after)
+			{
+			}
+		});
         layout.addView(input);
         
         Button finished = new Button(this);
@@ -141,11 +162,14 @@ public class TimetableActivity extends Activity
 				try
 				{
 					String enteredText = input.getText().toString();
-					activity.currentState.enteredStudentId = enteredText;
 					int studentId = Integer.parseInt(enteredText);
+					/*
+					 * Dit verbergt het schermtoetsenbord, indien nodig.
+					 */
 					InputMethodManager manager =
 							(InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
 					manager.hideSoftInputFromWindow(input.getWindowToken(), 0);
+					
 					callback.onResult(studentId);
 				}
 				catch (NumberFormatException e)
@@ -160,15 +184,7 @@ public class TimetableActivity extends Activity
 	
 	public void showLoadingView()
 	{
-		RelativeLayout layout = new RelativeLayout(this);
-		TextView loading = new TextView(this);
-		loading.setText("Rooster wordt geladen...");
-		loading.setTextSize(18);
-		RelativeLayout.LayoutParams params =
-				new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-		params.addRule(RelativeLayout.CENTER_IN_PARENT);
-		layout.addView(loading, params);
-		this.setContentView(layout);
+		this.setContentView(new LoadingView(this));
 	}
 	
 	public void showTimetableView(StudentTimetable timetable, Day startDay)
@@ -209,41 +225,40 @@ public class TimetableActivity extends Activity
 		
 		super.onActivityResult(requestCode, resultCode, data);
 	}
-
-	private MenuItem newStudentId = null;
-	private MenuItem manualRefresh = null;
 	
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
-		this.newStudentId = menu.add("Verander studentnummer");
-		this.manualRefresh = menu.add("Handmatig verversen");
+		MenuItem newStudentId = menu.add("Verander studentnummer");
+		newStudentId.setOnMenuItemClickListener(new OnMenuItemClickListener()
+		{
+			public boolean onMenuItemClick(MenuItem item)
+			{
+				if (currentState.timetable != null)
+		    		currentState.enteredStudentId = Integer.toString(currentState.timetable.student.id);
+		    	
+				activity.getNewStudentId("Voer hier het nieuwe studentnummer in:",
+						activity.loadTimetableUsingStudentId);
+				return true;
+			}
+		});
+		
+		MenuItem manualRefresh = menu.add("Handmatig verversen");
+		manualRefresh.setOnMenuItemClickListener(new OnMenuItemClickListener()
+		{
+			public boolean onMenuItemClick(MenuItem item)
+			{
+				if (currentState.timetable != null)
+		    	{
+		    		activity.currentState.loader = new StudentTimetableLoader(activity, true);
+					activity.currentState.loader.execute(currentState.timetable.student.id);
+		    		return true;
+		    	}
+		    	else
+		    		return false;
+			}
+		});
+		
 		return true;
-	}
-	
-	public boolean onOptionsItemSelected(MenuItem item)
-	{
-		State currentState = this.currentState;
-	    if (item == this.newStudentId)
-	    {
-	    	if (currentState.timetable != null)
-	    		currentState.enteredStudentId = Integer.toString(currentState.timetable.student.id);
-	    	
-			this.getNewStudentId("Voer hier het nieuwe studentnummer in:", this.loadTimetableUsingStudentId);
-			return true;
-	    }
-	    else if (item == this.manualRefresh)
-	    {
-	    	if (currentState.timetable != null)
-	    	{
-	    		activity.currentState.loader = new StudentTimetableLoader(this, true);
-				activity.currentState.loader.execute(currentState.timetable.student.id);
-	    		return true;
-	    	}
-	    	else
-	    		return false;
-	    }
-	    else
-	    	return super.onOptionsItemSelected(item);
 	}
 	
 	public Object onRetainNonConfigurationInstance()

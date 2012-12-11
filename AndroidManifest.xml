@@ -6,7 +6,7 @@
 
     <uses-sdk
         android:minSdkVersion="7"
-        android:targetSdkVersion="16" />
+        android:targetSdkVersion="17" />
 
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -24,11 +24,11 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".StudentIdActivity"
+            android:name="nl.nardilam.droidnose.StudentIdActivity"
             android:label="Nieuw studentnummer" >
         </activity>
         <activity
-            android:name=".ChooseDateActivity"
+            android:name="nl.nardilam.droidnose.ChooseDateActivity"
             android:label="Kies een datum" >
         </activity>
     </application>

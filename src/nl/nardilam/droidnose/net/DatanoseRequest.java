@@ -6,6 +6,8 @@ import java.util.*;
 
 public abstract class DatanoseRequest
 {
+	private static final String serviceURL = "http://content.datanose.nl/Timetable.svc/";
+	
     private HttpURLConnection connection = null;
     private URL serverAddress = null;
     private String path = null;
@@ -24,7 +26,7 @@ public abstract class DatanoseRequest
         {
             try
             {
-                serverAddress = new URL("http://content.datanose.nl/Timetable.svc/" + path);
+                serverAddress = new URL(serviceURL + path);
                 connection = (HttpURLConnection)serverAddress.openConnection(); 
                 connectionSetup(connection);
                 connection.connect();

@@ -1,25 +1,20 @@
 package nl.nardilam.droidnose;
 
 import java.util.Calendar;
-import java.util.TimeZone;
 import nl.nardilam.droidnose.datetime.Day;
 import nl.nardilam.droidnose.datetime.TimeUtils;
 
 import android.os.Build;
 import android.os.Bundle;
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CalendarView;
 import android.widget.DatePicker;
 import android.widget.RelativeLayout;
-import android.support.v4.app.NavUtils;
+import android.widget.ScrollView;
 
 public class ChooseDateActivity extends Activity
 {
@@ -33,7 +28,7 @@ public class ChooseDateActivity extends Activity
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        
+
         RelativeLayout layout = new RelativeLayout(this);
         
         final DatePicker datePicker = new DatePicker(this);	

@@ -27,8 +27,8 @@ public class DividerView extends View
 	{
 		super(context);
 		
-		this.thickness = thickness; 
-		this.marginSize = marginSize; 
+		this.thickness = thickness;
+		this.marginSize = marginSize;
 		this.setOrientation(Orientation.HORIZONTAL);
 		this.setBackgroundColor(color);
 	}

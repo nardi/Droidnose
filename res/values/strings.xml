@@ -2,10 +2,5 @@
 <resources>
 
     <string name="app_name">Droidnose</string>
-    <string name="hello_world">Hello world!</string>
-    <string name="menu_settings">Settings</string>
-    <string name="title_activity_timetable">TimetableActivity</string>
-    <string name="title_activity_student_id">Nieuw studentnummer</string>
-    <string name="title_activity_choose_date">Kies een datum</string>
 
 </resources>

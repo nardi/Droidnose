@@ -1,21 +1,16 @@
 package nl.nardilam.droidnose;
 
-import java.io.IOException;
-
-import nl.nardilam.droidnose.datetime.Day;
 import nl.nardilam.droidnose.datetime.Time;
-import nl.nardilam.droidnose.datetime.TimeUtils;
-import nl.nardilam.droidnose.gui.TimetableView;
-import nl.nardilam.droidnose.json.JSONException;
 import android.os.AsyncTask;
-import android.widget.TextView;
 import android.widget.Toast;
 
 public class StudentTimetableLoader extends AsyncTask<Integer, Void, StudentTimetable>
 {
 	private final StudentTimetableLoader timetableLoader = this;
+	
 	private TimetableActivity activity;
 	private final boolean forceRedownload;
+	
 	private boolean downloadedTimetable = false;
 	private boolean saveError = false;
 	
@@ -140,6 +135,7 @@ public class StudentTimetableLoader extends AsyncTask<Integer, Void, StudentTime
 				{
 					public void onResult(Integer result)
 					{
+						timetableLoader.getActivity().showLoadingView();
 						new StudentTimetableLoader(timetableLoader.getActivity()).execute(result);
 					}
 				};

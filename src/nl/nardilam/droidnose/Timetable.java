@@ -1,16 +1,20 @@
 package nl.nardilam.droidnose;
 
-import java.io.*;
-import java.util.*;
-
-import android.content.Context;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import nl.nardilam.droidnose.datetime.Day;
 import nl.nardilam.droidnose.datetime.Time;
 import nl.nardilam.droidnose.datetime.TimePeriod;
 import nl.nardilam.droidnose.datetime.TimeUtils;
 import nl.nardilam.droidnose.datetime.Week;
 import nl.nardilam.droidnose.datetime.WeekDay;
-import nl.nardilam.droidnose.json.JSONException;
 
 public abstract class Timetable implements Serializable
 {    
@@ -173,16 +177,10 @@ public abstract class Timetable implements Serializable
     public static List<Week> calculateWeeksFromPattern(String weekPattern, int academicYear)
 	{
     	/*
-		 * Een lege Calendar om de weken mee te berekenen
-		 */
-		Calendar firstWeek = Calendar.getInstance(TimeUtils.CET);
-		firstWeek.clear();
-		
-		/*
+		 * Een Calendar om de weken mee te berekenen.
 		 * Begint bij begin academisch jaar, dus week 0 in jaar 2012 is week 36 van 2012
 		 */
-		firstWeek.set(Calendar.YEAR, academicYear);
-		firstWeek.set(Calendar.WEEK_OF_YEAR, 36);
+		Calendar firstWeek = new Week(academicYear, 36, TimeUtils.CET).toCalendar();
 		
 		List<Week> weekList = new ArrayList<Week>();
 		for (int c = 0; c < weekPattern.length(); c++)

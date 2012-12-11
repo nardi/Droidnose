@@ -4,7 +4,6 @@ import nl.nardilam.droidnose.Event;
 import nl.nardilam.droidnose.Orientation;
 import nl.nardilam.droidnose.Utils;
 import android.content.Context;
-import android.graphics.Color;
 import android.view.Gravity;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -88,48 +87,4 @@ public class EventView extends TimeLayout
 		
 		this.layout.addView(divider, params);
 	}
-	
-	/* protected void update()
-	{
-		this.removeAllViews();
-		
-		Context context = this.getContext();
-		int hourHeight = this.getHourHeight();
-		int dividerSize = Utils.dipToPx(10);//1.3f);
-		double numHours = event.startTime.timeTo(event.endTime).inHours();
-		
-		this.setHeight((int)(hourHeight * numHours));
-		//this.setPadding(0, dividerSize / 2, 0, dividerSize / 2);
-		
-		DividerView divider = new DividerView(context, dividerSize);
-		divider.setOrientation(Orientation.HORIZONTAL);
-		this.addView(divider);
-		
-		LinearLayout vertical = new LinearLayout(context);
-		vertical.setOrientation(Orientation.VERTICAL);
-		this.addView(vertical);
-		
-		divider = new DividerView(context, dividerSize);
-		divider.setOrientation(Orientation.VERTICAL);
-		vertical.addView(divider);
-		
-		TextView v = new TextView(context);
-		//v.setHeight((int)(hourHeight * numHours - 2 * dividerSize));
-		v.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT, 1));
-		int padding = Utils.dipToPx(8);
-		v.setPadding(padding, padding, padding, padding);
-		v.setBackgroundColor(0xFFEAEAEA);
-		v.setGravity(Gravity.CENTER_HORIZONTAL);
-		v.setTextSize(16);
-		v.setText(event.course + "\n" + event.type + ", " + event.location);
-		vertical.addView(v);
-		
-		divider = new DividerView(context, dividerSize);
-		divider.setOrientation(Orientation.VERTICAL);
-		vertical.addView(divider);
-		
-		divider = new DividerView(context, dividerSize);
-		divider.setOrientation(Orientation.HORIZONTAL);
-		this.addView(divider);
-	} */
 }

@@ -19,12 +19,16 @@ public class DatanoseQuery
 	
 	public List<JSONValue> query() throws IOException, JSONException
 	{
-		DatanoseRequest req = new JSONDatanoseRequest(url);
-		Map<String, JSONValue> resp = JSONParser.parse(req.getBodyStream()).asObject();
-		req.finished();
-		JSONValue d = resp.get("d");
+		DatanoseRequest request = new JSONDatanoseRequest(url);
+		Map<String, JSONValue> response = JSONParser.parse(request.getBodyStream()).asObject();
+		request.finished();
+		
+		JSONValue d = response.get("d");
+		
 		if (d.isArray())
+		{
 			return d.asArray();
+		}
 		else if (d.isObject())
 		{
 			Map<String, JSONValue> dObj = d.asObject();
