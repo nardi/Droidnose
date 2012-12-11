@@ -20,7 +20,7 @@ import android.widget.TextView;
 public class DateTitleView extends TextView
 {
 	private static final DateFormat dayFormat = new SimpleDateFormat("EEEE d MMMM");
-	private static final int padding = Utils.dipToPx(8);
+	private static final int padding = Utils.dpToPx(8);
 	
 	public DateTitleView(final Context context, final Day day)
 	{
@@ -39,7 +39,7 @@ public class DateTitleView extends TextView
 		
 		this.setPadding(0, padding, 0, padding);
 		this.setGravity(Gravity.CENTER);
-		this.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+		this.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, Utils.dpToPx(40)));
 		
 		this.setClickable(true);
 		this.setOnClickListener(new OnClickListener()

@@ -4,7 +4,6 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Locale;
 import java.util.TimeZone;
 
 public class Week extends TimePeriod
@@ -23,7 +22,7 @@ public class Week extends TimePeriod
 	private static void neutralizeCalendar(Calendar calendar)
 	{
 		calendar.setFirstDayOfWeek(Calendar.MONDAY);
-		calendar.setMinimalDaysInFirstWeek(2);
+		calendar.setMinimalDaysInFirstWeek(4);
 	}
 	
 	/*
@@ -73,7 +72,7 @@ public class Week extends TimePeriod
 	
 	public Calendar toCalendar()
 	{
-		return calendar;
+		return this.calendar;
 	}
 	
 	public Week toTimeZone(TimeZone tz)
@@ -88,7 +87,7 @@ public class Week extends TimePeriod
 	
 	public Day getDay(WeekDay day)
 	{
-		Calendar dayCalendar = (Calendar)calendar.clone();
+		Calendar dayCalendar = (Calendar)this.calendar.clone();
 		dayCalendar.add(Calendar.DAY_OF_WEEK, day.ordinal());
 		return Day.fromCalendar(dayCalendar);
 	}

@@ -47,6 +47,24 @@ public class TimePeriod implements Serializable, Comparable<TimePeriod>
      * Comparison methods
      */
     
+    public boolean equals(Object o)
+    {
+    	try
+		{
+			return this.equals((TimePeriod)o);
+		}
+    	catch (ClassCastException e)
+		{
+			return false;
+		}
+    }
+	
+    public boolean equals(TimePeriod tp)
+    {
+    	return this.startTime.equals(tp.startTime)
+    		&& this.endTime.equals(tp.endTime);
+    }
+    
     public boolean startsDuring(TimePeriod tp)
     {
     	return startTime.isDuring(tp);

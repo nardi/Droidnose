@@ -13,6 +13,7 @@ import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
 import android.widget.CalendarView;
 import android.widget.DatePicker;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 
@@ -31,21 +32,30 @@ public class ChooseDateActivity extends Activity
 
         RelativeLayout layout = new RelativeLayout(this);
         
+        LinearLayout linearLayout = new LinearLayout(this);
+        linearLayout.setOrientation(Orientation.VERTICAL);
+        
         final DatePicker datePicker = new DatePicker(this);	
         datePicker.setId(1);
-		RelativeLayout.LayoutParams dpParams =
-				new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-		dpParams.addRule(RelativeLayout.CENTER_IN_PARENT);
 		
 		if (Build.VERSION.SDK_INT >= 11)
 		{
-			datePicker.setCalendarViewShown(true);
-			datePicker.setSpinnersShown(false);
-		}
-		if (Build.VERSION.SDK_INT >= 12)
-		{
-			CalendarView cv = datePicker.getCalendarView();
-			cv.setFirstDayOfWeek(Calendar.MONDAY);
+			if (Utils.isInPortraitMode())
+			{
+				datePicker.setCalendarViewShown(true);
+				datePicker.setSpinnersShown(false);
+				
+				if (Build.VERSION.SDK_INT >= 12)
+				{
+					CalendarView cv = datePicker.getCalendarView();
+					cv.setFirstDayOfWeek(Calendar.MONDAY);
+				}
+			}
+			else
+			{
+				datePicker.setCalendarViewShown(false);
+				datePicker.setSpinnersShown(true);
+			}
 		}
         
         Button finished = new Button(this);
@@ -64,17 +74,18 @@ public class ChooseDateActivity extends Activity
         };
         finished.setOnClickListener(onFinished);
         
-        RelativeLayout.LayoutParams finParams =
-				new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-		finParams.addRule(RelativeLayout.CENTER_IN_PARENT);
-		finParams.addRule(RelativeLayout.BELOW, datePicker.getId());
-        
         Day selectedDay = createDayFromintent(this.getIntent());
         datePicker.init(selectedDay.year, selectedDay.month - 1, selectedDay.day, null);
         
-        layout.addView(datePicker, dpParams);
-        layout.addView(finished, finParams);
+        linearLayout.addView(datePicker);
+        linearLayout.addView(finished);
         
+        RelativeLayout.LayoutParams layoutParams =
+				new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+		layoutParams.addRule(RelativeLayout.CENTER_IN_PARENT);
+        
+		layout.addView(linearLayout, layoutParams);
+		
         this.setContentView(layout);
     }
     

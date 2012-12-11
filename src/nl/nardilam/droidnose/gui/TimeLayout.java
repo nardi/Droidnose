@@ -2,7 +2,6 @@ package nl.nardilam.droidnose.gui;
 
 import nl.nardilam.droidnose.Orientation;
 import android.content.Context;
-import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 /*
@@ -14,9 +13,17 @@ import android.widget.LinearLayout;
  */
 public class TimeLayout extends LinearLayout
 {
+	public static final int DEFAULT_STARTHOUR = 9;
+	public static final int DEFAULT_ENDHOUR = 17;
+	
 	private int hourHeight = 0;
-	public final int startHour;
-	public final int endHour;
+	private int startHour;
+	private int endHour;
+	
+	public TimeLayout(Context context)
+	{
+		this(context, DEFAULT_STARTHOUR, DEFAULT_ENDHOUR);
+	}
 	
 	public TimeLayout(Context context, int startHour, int endHour)
 	{
@@ -36,6 +43,23 @@ public class TimeLayout extends LinearLayout
 	public int getHourHeight()
 	{
 		return this.hourHeight;
+	}
+	
+	public void setHourRange(int startHour, int endHour)
+	{
+		this.startHour = startHour;
+		this.endHour = endHour;
+		this.update();
+	}
+	
+	public int getStartHour()
+	{
+		return this.startHour;
+	}
+	
+	public int getEndHour()
+	{
+		return this.endHour;
 	}
 	
 	protected void update()

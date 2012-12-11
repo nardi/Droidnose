@@ -16,6 +16,23 @@ public class EventType implements Serializable
         allTypes.add(this);
     }
     
+    public boolean equals(Object o)
+    {
+    	try
+		{
+			return this.equals((EventType)o);
+		}
+    	catch (ClassCastException e)
+		{
+			return false;
+		}
+    }
+	
+    public boolean equals(EventType et)
+    {
+    	return this.name.equals(et.name);
+    }
+    
     public String toString()
     {
         return name;
@@ -39,7 +56,7 @@ public class EventType implements Serializable
     {
         for(EventType et : allTypes)
         {
-            if (et.toString().equals(typeName))
+            if (et.name.equals(typeName))
               return et;
         }
         

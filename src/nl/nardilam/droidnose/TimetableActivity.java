@@ -35,6 +35,15 @@ public class TimetableActivity extends Activity
 	// Een alias voor extra duidelijkheid in de binnenklassen
 	private final TimetableActivity activity = this;
 
+	/*
+	 * Dit object wordt gebruikt om de huidige staat van de Activity
+	 * in op te slaan in geval van een vernietiging ervan door wat dan ook.
+	 * 
+	 * enteredStudentId houdt de ingevulde tekst in het studentnummervakje bij,
+	 * loader houdt bij of er een rooster geladen wordt en het bijbehorende object,
+	 * timetable bevat het huidige rooster en startDay de dag die tenminste
+	 * op het scherm moet komen.
+	 */
 	public class State
 	{
 		public String enteredStudentId = null;
@@ -128,7 +137,7 @@ public class TimetableActivity extends Activity
         text.setText(message);
         text.setTextSize(16);
         text.setGravity(Gravity.CENTER);
-        int padding = Utils.dipToPx(8);
+        int padding = Utils.dpToPx(8);
         text.setPadding(padding, padding, padding, padding);
         layout.addView(text);
         

@@ -78,7 +78,7 @@ public class Day extends TimePeriod
 	
 	public Day add(int days)
     {
-		Calendar c = this.toCalendar();
+		Calendar c = (Calendar)this.calendar.clone();
 		c.add(Calendar.DAY_OF_YEAR, days);
 		return Day.fromCalendar(c);
     }

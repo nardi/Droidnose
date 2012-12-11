@@ -19,24 +19,24 @@ public class DayView extends TimeLayout
 {
 	private final Timetable timetable;
 	private final Day day;
+	private final HourView hourView;
 	
-	private final LinkedScrollView lsv;
+	private LinkedScrollView dayScrollView = null;
 	
-	public DayView(Context context, Timetable timetable, Day day, HourView hourView, LinkedScrollView lsv)
+	public void setVerticalScrollBarEnabled(boolean enabled)
 	{
-		this(context, timetable, day, hourView.startHour, hourView.endHour, lsv);
+		this.dayScrollView.setVerticalScrollBarEnabled(enabled);
 	}
 	
-	public DayView(Context context, Timetable timetable, Day day, int startHour, int endHour, LinkedScrollView lsv)
+	public DayView(Context context, Timetable timetable, Day day, HourView hourView)
 	{
-		super(context, startHour, endHour);
+		super(context, hourView.getStartHour(), hourView.getEndHour());
 		
 		this.timetable = timetable;
 		this.day = day;
+		this.hourView = hourView;
 		
 		this.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
-		
-		this.lsv = lsv;
 	}
 	
 	protected void update()
@@ -49,13 +49,13 @@ public class DayView extends TimeLayout
 		DateTitleView dtView = new DateTitleView(context, day);
 		this.addView(dtView);
 		
-		LinkedScrollView dayScrollView = new LinkedScrollView(context);
-		dayScrollView.linkTo(this.lsv);
+		dayScrollView = new LinkedScrollView(context);
+		dayScrollView.linkTo(this.hourView.getScrollView());
 		this.addView(dayScrollView);
 		
 		RelativeLayout layout = new RelativeLayout(context);
 		layout.setPadding(0, hourHeight / 2, 0, 0);
-		int numHours = this.endHour - this.startHour + 1;
+		int numHours = this.getEndHour() - this.getStartHour() + 1;
 		layout.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, numHours * hourHeight));
 		dayScrollView.addView(layout); 
 		
@@ -74,7 +74,7 @@ public class DayView extends TimeLayout
 			
 			groupParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
 			
-			double emptyTime = groupStart - this.startHour;
+			double emptyTime = groupStart - this.getStartHour();
 			groupParams.topMargin = (int)(emptyTime * hourHeight);
 			
 			for (Event event : eventGroup)
@@ -111,8 +111,8 @@ public class DayView extends TimeLayout
 					if (candidate.startsDuring(member))
 					{
 						eventGroup.add(candidate);
-					}
-						
+						break;
+					}	
 				}
 			}
 			

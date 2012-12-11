@@ -41,7 +41,7 @@ public class EventView extends TimeLayout
 		
 		LinearLayout textLayout = new LinearLayout(context);
 		textLayout.setOrientation(Orientation.VERTICAL);
-		int padding = Utils.dipToPx(8);
+		int padding = Utils.dpToPx(8);
 		textLayout.setPadding(padding, padding, padding, padding);
 		
 		RelativeLayout.LayoutParams textParams =

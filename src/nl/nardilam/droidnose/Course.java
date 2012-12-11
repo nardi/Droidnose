@@ -19,6 +19,26 @@ public class Course implements Serializable
 		this.academicYear = academicYear;
 	}
 	
+	public boolean equals(Object o)
+    {
+    	try
+		{
+			return this.equals((Course)o);
+		}
+    	catch (ClassCastException e)
+		{
+			return false;
+		}
+    }
+	
+    public boolean equals(Course c)
+    {
+    	return this.id == c.id
+    		&& this.catalogNumber.equals(c.catalogNumber)
+    		&& this.name.equals(c.name)
+    		&& this.academicYear == c.academicYear;
+    }
+	
 	public String toString()
 	{
 		return this.name;

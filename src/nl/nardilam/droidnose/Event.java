@@ -25,6 +25,27 @@ public class Event extends TimePeriod
         this.staff = Collections.unmodifiableCollection(staff);
     }
     
+    public boolean equals(Object o)
+    {
+    	try
+		{
+			return this.equals((Event)o);
+		}
+    	catch (ClassCastException e)
+		{
+			return false;
+		}
+    }
+	
+    public boolean equals(Event e)
+    {
+    	return super.equals(e)
+    		&& this.course.equals(e.course)
+    		&& this.type.equals(e.type)
+    		&& this.location.equals(e.location)
+    		&& this.staff.equals(e.staff);
+    }
+    
     private static DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
     private static DateFormat timeFormat = new SimpleDateFormat("HH:mm");
     public String toString()

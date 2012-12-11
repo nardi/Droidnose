@@ -25,8 +25,18 @@ public class Utils
 			throw new ContextNotSetException();
 	}
 	
-	public static int dipToPx(float dips)
+	public static int dpToPx(float dips)
 	{
 		return Math.max(Math.round(dips * displayMetrics.density), 1);
+	}
+	
+	public static int pxToDp(float pixels)
+	{
+		return Math.max(Math.round(pixels / displayMetrics.density), 1);
+	}
+	
+	public static boolean isInPortraitMode()
+	{
+		return displayMetrics.heightPixels > displayMetrics.widthPixels;
 	}
 }

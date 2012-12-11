@@ -32,6 +32,10 @@ public abstract class Timetable implements Serializable
         
         if (this.eventList.size() > 1)
         {
+        	/*
+        	 * Sommige Activities zijn identiek op alle gebieden behalve de locatie.
+        	 * Om deze goed weer te geven voegen we ze hier samen.
+        	 */
 	        for (int i = 0; i < this.eventList.size() - 1; i++)
 	        {
 	        	Event e1 = this.eventList.get(i);
