@@ -99,7 +99,7 @@ public class StudentTimetable extends Timetable
 				 * Locaties ophalen kost erg veel requests en tijd, kan
 				 * waarschijnlijk sneller als batchrequest gedaan worden
 				 */
-				String location = "nog onbekende locatie";
+				String location = Event.DEFAULT_LOCATION;
 				DatanoseQuery locationsByActivity = new DatanoseQuery("GetLocationsByActivity?id="
 						+ (int)activity.get("ID").asNumber());
 				List<JSONValue> locations = locationsByActivity.query();

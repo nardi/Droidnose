@@ -4,27 +4,16 @@ import nl.nardilam.droidnose.datetime.Day;
 import nl.nardilam.droidnose.datetime.Time;
 import nl.nardilam.droidnose.datetime.TimeUtils;
 import nl.nardilam.droidnose.gui.LoadingView;
+import nl.nardilam.droidnose.gui.StudentIdView;
 import nl.nardilam.droidnose.gui.TimetableView;
 import android.os.Bundle;
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.text.Editable;
-import android.text.InputType;
-import android.text.TextWatcher;
-import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MenuItem.OnMenuItemClickListener;
-import android.view.View;
-import android.view.ViewGroup.LayoutParams;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 public class TimetableActivity extends Activity
 {
@@ -127,67 +116,7 @@ public class TimetableActivity extends Activity
 	
 	public void getNewStudentId(String message, final Callback<Integer> callback)
 	{		
-		LinearLayout layout = new LinearLayout(this);
-		layout.setOrientation(Orientation.VERTICAL);
-		this.setContentView(layout);
-        
-        final TextView text = new TextView(this);
-        text.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
-        text.setText(message);
-        text.setTextSize(16);
-        text.setGravity(Gravity.CENTER);
-        int padding = Utils.dpToPx(8);
-        text.setPadding(padding, padding, padding, padding);
-        layout.addView(text);
-        
-        final EditText input = new EditText(this);
-        input.setInputType(InputType.TYPE_CLASS_PHONE);
-        if (this.currentState.enteredStudentId != null)
-        	input.setText(this.currentState.enteredStudentId);
-        input.addTextChangedListener(new TextWatcher()
-		{
-			public void afterTextChanged(Editable s)
-			{
-				activity.currentState.enteredStudentId = s.toString();
-			}
-			
-			public void onTextChanged(CharSequence s, int start, int before, int count)
-			{
-			}
-			
-			public void beforeTextChanged(CharSequence s, int start, int count, int after)
-			{
-			}
-		});
-        layout.addView(input);
-        
-        Button finished = new Button(this);
-        finished.setText("Klaar!");
-        View.OnClickListener onFinished = new View.OnClickListener()
-        {
-			public void onClick(View view)
-			{
-				try
-				{
-					String enteredText = input.getText().toString();
-					int studentId = Integer.parseInt(enteredText);
-					/*
-					 * Dit verbergt het schermtoetsenbord, indien nodig.
-					 */
-					InputMethodManager manager =
-							(InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
-					manager.hideSoftInputFromWindow(input.getWindowToken(), 0);
-					
-					callback.onResult(studentId);
-				}
-				catch (NumberFormatException e)
-				{
-					activity.getNewStudentId("De ingevoerde tekst lijkt geen nummer te zijn. Typfoutje?", callback);
-				}
-			}
-        };
-        finished.setOnClickListener(onFinished);
-        layout.addView(finished);
+		this.setContentView(new StudentIdView(this, message, callback));
 	}
 	
 	public void showLoadingView()

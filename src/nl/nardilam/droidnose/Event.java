@@ -10,6 +10,8 @@ public class Event extends TimePeriod
 {    
 	private static final long serialVersionUID = 1L;
 	
+	public static final String DEFAULT_LOCATION = "nog onbekende locatie";
+	
 	public final Course course;
 	public final EventType type;
 	public final String location;
