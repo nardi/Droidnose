@@ -87,6 +87,16 @@ public class Day extends TimePeriod
 	{
 		return Week.fromCalendar(this.toCalendar());
 	}
+	
+	public WeekDay getWeekDay()
+	{
+		int calendarDay = calendar.get(Calendar.DAY_OF_WEEK);
+		if (calendarDay == Calendar.SUNDAY)
+			return WeekDay.Sunday;
+		else
+			return WeekDay.values()[calendarDay - 2];
+	}
+	
 	public String toString()
 	{
 		return day + "-" + month + "-" + year;

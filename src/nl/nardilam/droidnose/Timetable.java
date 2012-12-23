@@ -5,8 +5,12 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
 import nl.nardilam.droidnose.datetime.Day;
 import nl.nardilam.droidnose.datetime.Time;
 import nl.nardilam.droidnose.datetime.TimePeriod;
@@ -24,14 +28,13 @@ public abstract class Timetable implements Serializable
 	
     protected Timetable(List<Event> events)
     {    	
-    	this.eventList = new ArrayList<Event>(events);
+    	this.setEvents(new ArrayList<Event>(events));
         this.updateLog = new HashMap<Day, Time>();
         this.lastFullUpdate = null;
-        
-        this.sort();
     }
     
     private static final String weekFormat = "substring(WeekPattern, %1$s, 1) eq '1'";
+    private static final String dayFormat = "Days eq '%1$s'";
     
     public void update(List<Day> daysToUpdate) throws Exception
     {
@@ -67,9 +70,7 @@ public abstract class Timetable implements Serializable
      * Nog niet af.
      */
     protected String makeDateFilter(List<Day> daysToUpdate)
-    {
-    	StringBuilder dateFilter = new StringBuilder();
-    	
+    {    	
     	Map<Week, List<Day>> daysInWeek = new HashMap<Week, List<Day>>();
     	for (Day day : daysToUpdate)
     	{
@@ -81,8 +82,12 @@ public abstract class Timetable implements Serializable
     		daysInWeek.get(week).add(day);
     	}
     	
-    	for (Week week : daysInWeek.keySet())
+    	StringBuilder weeksFilterBuilder = new StringBuilder();
+    	
+    	Iterator<Week> weekIterator = daysInWeek.keySet().iterator();
+    	while (weekIterator.hasNext())
     	{
+    		Week week = weekIterator.next();
     		int academicYear;
     		if (week.number >= 36)
     			academicYear = week.year;
@@ -92,9 +97,35 @@ public abstract class Timetable implements Serializable
     		int academicWeek = (int)firstWeek.startTime.timeTo(week.startTime).inWeeks();
     		
     		String weekFilter = String.format(weekFormat, academicWeek);
+    		
+    		StringBuilder daysFilterBuilder = new StringBuilder();    		
+    		List<Day> days = daysInWeek.get(week);
+    		Iterator<Day> dayIterator = days.iterator();
+        	while (dayIterator.hasNext())
+        	{
+        		Day day = dayIterator.next();
+        		WeekDay weekDay = day.getWeekDay();
+        		
+        		int dayNumber = (int)Math.pow(2, weekDay.ordinal());
+        		String dayFilter = String.format(dayFormat, dayNumber);
+        		
+        		daysFilterBuilder.append(dayFilter);
+        		
+        		if (dayIterator.hasNext())
+        			daysFilterBuilder.append(" or ");
+        	}
+    		
+    		weeksFilterBuilder.append("(");
+    		weeksFilterBuilder.append(weekFilter);
+    		weeksFilterBuilder.append(" and (");
+    		weeksFilterBuilder.append(daysFilterBuilder);
+    		weeksFilterBuilder.append("))");
+    		
+    		if (weekIterator.hasNext())
+    			weeksFilterBuilder.append(" or ");
     	}
-    	
-    	return dateFilter.toString();
+    	  	
+    	return weeksFilterBuilder.toString();
     }
     
     protected abstract List<Event> downloadEvents(String dateFilter) throws Exception;
@@ -103,6 +134,44 @@ public abstract class Timetable implements Serializable
     {
     	this.eventList = events;
     	this.sort();
+    	
+    	if (this.eventList.size() > 1)
+        {
+	        for (int i = 0; i < this.eventList.size() - 2; i++)
+	        {
+	        	Event e1 = this.eventList.get(i);
+	        	Event e2 = this.eventList.get(i + 1);
+	        	if (this.eventsAlmostEqual(e1, e2))
+	        	{
+	        		Event mergedEvent = this.mergeEvents(e1, e2);
+	        		this.eventList.remove(i + 1);
+	        		this.eventList.remove(i);
+	        		this.eventList.add(i, mergedEvent);
+	        		i--;
+	        	}
+	        }
+        }
+    }
+    
+    private boolean eventsAlmostEqual(Event e1, Event e2)
+    {
+    	return e1.startTime.equals(e2.startTime)
+    		&& e1.endTime.equals(e2.endTime)
+    		&& e1.course.equals(e2.course)
+    		&& e1.type.equals(e2.type);
+    }
+    
+    private Event mergeEvents(Event e1, Event e2)
+    {
+    	Set<String> staffSet = new HashSet<String>();
+		staffSet.addAll(e1.staff);
+		staffSet.addAll(e2.staff);
+		return new Event(e1.startTime,
+				e1.endTime,
+				e1.course,
+				e1.type,
+				e1.location + ", " + e2.location,
+				staffSet);
     }
     
     public List<Event> getEvents()
@@ -120,17 +189,28 @@ public abstract class Timetable implements Serializable
     	return this.lastFullUpdate;
     }
     
-    public void sort()
+    protected void sort()
     {
     	Collections.sort(this.eventList);
     }
     
-    public List<Event> startDuring(TimePeriod timePeriod)
+    public List<Event> startDuring(Day day)
     {
+    	Time lastUpdate = this.updateLog.get(day);
+    	if (lastUpdate == null)
+    	{
+    		if (this.lastFullUpdate != null)
+    			lastUpdate = this.lastFullUpdate;
+    		else
+    		{
+				
+			}
+    	}
+    	
     	List<Event> events = new ArrayList<Event>();
 		for (Event e : this.getEvents())
 		{
-			if (e.startsDuring(timePeriod))
+			if (e.startsDuring(day))
 				events.add(e);
 		}
 		return events;

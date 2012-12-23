@@ -2,6 +2,8 @@ package nl.nardilam.droidnose.gui;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+
+import nl.nardilam.droidnose.ActivityRequests;
 import nl.nardilam.droidnose.ChooseDateActivity;
 import nl.nardilam.droidnose.Utils;
 import nl.nardilam.droidnose.datetime.Day;
@@ -50,7 +52,7 @@ public class DateTitleView extends TextView
 				{
 					Activity activity = (Activity)context;
 					Intent intent = ChooseDateActivity.createIntentFromDay(day, new Intent(activity, ChooseDateActivity.class));
-					activity.startActivityForResult(intent, ChooseDateActivity.DATE_REQUEST);
+					activity.startActivityForResult(intent, ActivityRequests.DATE_REQUEST);
 				}
 			}
 		});		

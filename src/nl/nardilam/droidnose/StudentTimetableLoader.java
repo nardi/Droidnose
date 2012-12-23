@@ -4,24 +4,25 @@ import nl.nardilam.droidnose.datetime.Time;
 import android.os.AsyncTask;
 import android.widget.Toast;
 
-public class StudentTimetableLoader extends AsyncTask<Integer, Void, StudentTimetable>
+public class StudentTimetableLoader extends AsyncTask<Void, Void, StudentTimetable>
 {
-	private final StudentTimetableLoader timetableLoader = this;
-	
 	private TimetableActivity activity;
+	private final int studentId;
 	private final boolean forceRedownload;
 	
 	private boolean downloadedTimetable = false;
 	private boolean saveError = false;
+	private Exception fatalException = null;
 	
-	public StudentTimetableLoader(TimetableActivity activity)
+	public StudentTimetableLoader(TimetableActivity activity, int studentId)
 	{
-		this(activity, false);
+		this(activity, studentId, false);
 	}
 	
-	public StudentTimetableLoader(TimetableActivity activity, boolean forceRedownload)
+	public StudentTimetableLoader(TimetableActivity activity, int studentId, boolean forceRedownload)
 	{
 		this.setActivity(activity);
+		this.studentId = studentId;
 		this.forceRedownload = forceRedownload;
 	}
 	
@@ -40,22 +41,20 @@ public class StudentTimetableLoader extends AsyncTask<Integer, Void, StudentTime
 	{
 	}
 	
-    protected StudentTimetable doInBackground(Integer... ids)
+    protected StudentTimetable doInBackground(Void... nothings)
     {
-    	int studentId = ids[0];
-        
     	/*
     	 * Download het rooster opnieuw als het moet
     	 */
         if (this.forceRedownload)
-        	return tryDownloadStudentTimetable(studentId);
+        	return tryDownloadStudentTimetable();
         
         /*
 		 * Probeer anders het rooster uit een lokaal bestand te laden
 		 */
         try
 		{
-			StudentTimetable timetable = StudentTimetable.loadFromFile(Integer.toString(studentId));
+			StudentTimetable timetable = StudentTimetable.loadFromFile(Integer.toString(this.studentId));
 			/*
 			 * Gebruik het lokale bestand als het binnen de laatste 24 uur geupdate is,
 			 * download het rooster anders opnieuw
@@ -63,7 +62,7 @@ public class StudentTimetableLoader extends AsyncTask<Integer, Void, StudentTime
 			if (timetable.lastFullUpdate.timeTo(Time.now()).inHours() < 24)
 				return timetable;
 			else
-				return this.tryDownloadStudentTimetable(studentId);
+				return this.tryDownloadStudentTimetable();
 				
 		}
 		/*
@@ -72,19 +71,19 @@ public class StudentTimetableLoader extends AsyncTask<Integer, Void, StudentTime
 		 */	
 		catch (Exception loadException)
 		{
-			return this.tryDownloadStudentTimetable(studentId);
+			return this.tryDownloadStudentTimetable();
 		}
     }
     
-    private StudentTimetable tryDownloadStudentTimetable(int studentId)
+    private StudentTimetable tryDownloadStudentTimetable()
     {
     	try
 		{
-    		Student student = Student.download(studentId);
+    		Student student = Student.download(this.studentId);
     		StudentTimetable timetable = StudentTimetable.download(student);
     		try
     		{
-    			timetable.saveToFile(Integer.toString(studentId));
+    			timetable.saveToFile(Integer.toString(this.studentId));
     		}
     		catch (Exception saveException)
     		{
@@ -103,6 +102,7 @@ public class StudentTimetableLoader extends AsyncTask<Integer, Void, StudentTime
 			 * Er ging iets onherstelbaar fout, return null
 			 * om dat aan te geven aan de UI-thread
 			 */
+			this.fatalException = downloadException;
 			return null;
 		}
     }
@@ -111,7 +111,7 @@ public class StudentTimetableLoader extends AsyncTask<Integer, Void, StudentTime
     {
     	if (timetable != null)
     	{
-    		this.getActivity().showTimetableView(timetable, null);
+    		this.getActivity().showTimetableView(timetable);
     		
     		String toastText = "";
     		
@@ -131,18 +131,12 @@ public class StudentTimetableLoader extends AsyncTask<Integer, Void, StudentTime
     		}
     		else
     		{
-	    		Callback<Integer> callback = new Callback<Integer>()
-				{
-					public void onResult(Integer result)
-					{
-						timetableLoader.getActivity().showLoadingView();
-						new StudentTimetableLoader(timetableLoader.getActivity()).execute(result);
-					}
-				};
 				this.getActivity().getNewStudentId(
 						"Er is een fout opgetreden bij het ophalen "
-					  + "van het rooster voor dit studentnummer.\n"
-					  + "Controleer aub of het ingevoerde nummer klopt.", callback);
+					  + "van het rooster voor dit studentnummer:\n\n"
+					  + fatalException + "\n\n"
+					  + "Controleer aub of het ingevoerde nummer klopt.",
+					  Integer.toString(this.studentId));
     		}
     	}
     }

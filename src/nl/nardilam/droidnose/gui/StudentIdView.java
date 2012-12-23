@@ -16,13 +16,13 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-public class StudentIdView extends LinearLayout
+/* public class StudentIdView extends LinearLayout
 {
 	public StudentIdView(final TimetableActivity context, String message, final Callback<Integer> callback)
 	{
 		super(context);
 		
-		this.setOrientation(Orientation.VERTICAL);
+this.setOrientation(Orientation.VERTICAL);
         
         final TextView text = new TextView(context);
         text.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
@@ -35,10 +35,9 @@ public class StudentIdView extends LinearLayout
         
         final EditText input = new EditText(context);
         input.setInputType(InputType.TYPE_CLASS_PHONE);
-        
         if (context.currentState.enteredStudentId != null)
         	input.setText(context.currentState.enteredStudentId);
-        
+
         input.addTextChangedListener(new TextWatcher()
 		{
 			public void afterTextChanged(Editable s)
@@ -68,9 +67,7 @@ public class StudentIdView extends LinearLayout
 				{
 					String enteredText = input.getText().toString();
 					int studentId = Integer.parseInt(enteredText);
-					/*
-					 * Dit verbergt het schermtoetsenbord, indien nodig.
-					 */
+
 					InputMethodManager manager =
 							(InputMethodManager)context.getSystemService(Context.INPUT_METHOD_SERVICE);
 					manager.hideSoftInputFromWindow(input.getWindowToken(), 0);
@@ -87,4 +84,4 @@ public class StudentIdView extends LinearLayout
         finished.setOnClickListener(onFinished);
         this.addView(finished);
 	}
-}
+} */

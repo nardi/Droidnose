@@ -12,6 +12,11 @@ public class LoadingView extends RelativeLayout
 {
 	public LoadingView(Context context)
 	{
+		this(context, null);
+	}
+	
+	public LoadingView(Context context, String message)
+	{
 		super(context);
 		
 		LinearLayout layout = new LinearLayout(context);
@@ -20,12 +25,15 @@ public class LoadingView extends RelativeLayout
         pBar.setIndeterminate(true);
         layout.addView(pBar);
         
-		TextView text = new TextView(context);
-		text.setText("Rooster wordt geladen...");
-		text.setTextSize(18);
-		text.setGravity(Gravity.CENTER_VERTICAL);
-		text.setPadding(Utils.dpToPx(4), 0, 0, 0);
-		layout.addView(text, new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT));
+        if (message != null)
+        {
+			TextView text = new TextView(context);
+			text.setText(message);
+			text.setTextSize(18);
+			text.setGravity(Gravity.CENTER_VERTICAL);
+			text.setPadding(Utils.dpToPx(4), 0, 0, 0);
+			layout.addView(text, new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT));
+        }
 		
 		RelativeLayout.LayoutParams params =
 				new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);

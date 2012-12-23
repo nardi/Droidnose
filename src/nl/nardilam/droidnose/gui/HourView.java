@@ -11,7 +11,7 @@ import android.widget.TextView;
 
 public class HourView extends TimeLayout
 {
-	private static final int DEFAULT_NUM_HOURS = 9;
+	private static final int DEFAULT_NUM_HOURS = TimeLayout.DEFAULT_ENDHOUR - TimeLayout.DEFAULT_STARTHOUR;
 	
 	private final HourView hourView = this;
 	

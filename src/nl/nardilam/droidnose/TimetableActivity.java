@@ -4,7 +4,6 @@ import nl.nardilam.droidnose.datetime.Day;
 import nl.nardilam.droidnose.datetime.Time;
 import nl.nardilam.droidnose.datetime.TimeUtils;
 import nl.nardilam.droidnose.gui.LoadingView;
-import nl.nardilam.droidnose.gui.StudentIdView;
 import nl.nardilam.droidnose.gui.TimetableView;
 import android.os.Bundle;
 import android.app.Activity;
@@ -14,6 +13,7 @@ import android.content.SharedPreferences.Editor;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MenuItem.OnMenuItemClickListener;
+import android.view.View;
 
 public class TimetableActivity extends Activity
 {
@@ -27,14 +27,13 @@ public class TimetableActivity extends Activity
 	 * Dit object wordt gebruikt om de huidige staat van de Activity
 	 * in op te slaan in geval van een vernietiging ervan door wat dan ook.
 	 * 
-	 * enteredStudentId houdt de ingevulde tekst in het studentnummervakje bij,
 	 * loader houdt bij of er een rooster geladen wordt en het bijbehorende object,
 	 * timetable bevat het huidige rooster en startDay de dag die tenminste
 	 * op het scherm moet komen.
 	 */
 	public class State
 	{
-		public String enteredStudentId = null;
+		public boolean isLoading = false;
 		public StudentTimetableLoader loader = null;
 		public StudentTimetable timetable = null;
 		public Day startDay = null;
@@ -64,7 +63,7 @@ public class TimetableActivity extends Activity
 		}
 		else
 		{
-			this.tryLoadStudentId(this.loadTimetableUsingStudentId);
+			this.tryLoadStudentId();
 		}
 	}
 	
@@ -80,8 +79,8 @@ public class TimetableActivity extends Activity
 		if (currentTimetable != null
 		 && currentTimetable.lastFullUpdate.timeTo(Time.now()).inHours() >= 24)
 		{
-			this.currentState.loader = new StudentTimetableLoader(this);
-			this.currentState.loader.execute(currentTimetable.student.id);
+			this.currentState.loader = new StudentTimetableLoader(this, currentTimetable.student.id);
+			this.currentState.loader.execute();
 		}
 	}
 	
@@ -92,36 +91,56 @@ public class TimetableActivity extends Activity
 			this.currentState = lastState;
 	}
 	
-	private void tryLoadStudentId(Callback<Integer> callback)
+	private void tryLoadStudentId()
 	{
 		SharedPreferences settings = this.getSharedPreferences(PREFERENCES_FILE, MODE_PRIVATE);
 		int studentId = settings.getInt(STUDENTID, -1);
 		
 		if (studentId != -1)
-			callback.onResult(studentId);
+			this.loadTimetableUsingStudentId(studentId);
 		else
-			this.getNewStudentId("Er is nog geen studentnummer bekend. Voer deze aub hier in:", callback);
+			this.getNewStudentId("Er is nog geen studentnummer bekend. Deze kan je hier invullen, als je wilt:");
 	}
 	
-	private final Callback<Integer> loadTimetableUsingStudentId = new Callback<Integer>()
+	private void loadTimetableUsingStudentId(int studentId)
 	{
-		public void onResult(Integer result)
-		{
-			activity.showLoadingView();
-			activity.currentState.timetable = null;
-			activity.currentState.loader = new StudentTimetableLoader(activity);
-			activity.currentState.loader.execute(result);
-		}
-	};
+		this.showLoadingView();
+		this.currentState.timetable = null;
+		this.currentState.loader = new StudentTimetableLoader(activity, studentId);
+		this.currentState.loader.execute();
+	}
 	
-	public void getNewStudentId(String message, final Callback<Integer> callback)
-	{		
-		this.setContentView(new StudentIdView(this, message, callback));
+	public void getNewStudentId(String message)
+	{
+		this.getNewStudentId(message, null);
+	}
+	
+	public void getNewStudentId(String message, String defaultInput)
+	{
+		Intent intent = StudentIdActivity.createIntent(this, message, defaultInput);
+		this.startActivityForResult(intent, ActivityRequests.STUDENT_ID_REQUEST);
 	}
 	
 	public void showLoadingView()
 	{
-		this.setContentView(new LoadingView(this));
+		this.currentState.isLoading = true;
+		this.setTitle("Droidnose");
+		this.setContentView(new LoadingView(this, "Rooster wordt geladen..."));
+	}
+	
+	public void showTimetableView()
+	{
+		this.showTimetableView(null, null);
+	}
+	
+	public void showTimetableView(StudentTimetable timetable)
+	{
+		this.showTimetableView(timetable, null);
+	}
+	
+	public void showTimetableView(Day startDay)
+	{
+		this.showTimetableView(null, startDay);
 	}
 	
 	public void showTimetableView(StudentTimetable timetable, Day startDay)
@@ -144,9 +163,12 @@ public class TimetableActivity extends Activity
 		TimetableView timetableView = new TimetableView(this, timetable, startDay);
 		this.setContentView(timetableView);
 		this.setTitle("Persoonlijk rooster");
+		
+		this.currentState.isLoading = false;
 		this.currentState.timetable = timetable;
 		this.currentState.startDay = startDay;
 		this.currentState.loader = null;
+		
 		Editor settingsEditor = this.getSharedPreferences(PREFERENCES_FILE, MODE_PRIVATE).edit();
 		settingsEditor.putInt(STUDENTID, timetable.student.id);
 		settingsEditor.commit();
@@ -154,48 +176,77 @@ public class TimetableActivity extends Activity
 	
 	protected void onActivityResult(int requestCode, int resultCode, Intent data)
 	{
-		if (requestCode == ChooseDateActivity.DATE_REQUEST && resultCode == RESULT_OK)
+		if (requestCode == ActivityRequests.DATE_REQUEST && resultCode == Activity.RESULT_OK)
 		{
-			Day day = ChooseDateActivity.createDayFromintent(data);
-			this.showTimetableView(null, day);
+			Day day = ChooseDateActivity.createDayFromIntent(data);
+			this.showTimetableView(day);
+		}
+		
+		if (requestCode == ActivityRequests.STUDENT_ID_REQUEST)
+		{
+			if (resultCode == Activity.RESULT_OK)
+			{
+				int studentId = StudentIdActivity.getStudentIdFromIntent(data);
+				this.loadTimetableUsingStudentId(studentId);
+			}
+			else if (resultCode == Activity.RESULT_CANCELED && currentState.timetable == null)
+			{
+				this.finish();
+			}
 		}
 		
 		super.onActivityResult(requestCode, resultCode, data);
 	}
 	
-	public boolean onCreateOptionsMenu(Menu menu)
+	public boolean onPrepareOptionsMenu(Menu menu)
 	{
-		MenuItem newStudentId = menu.add("Verander studentnummer");
-		newStudentId.setOnMenuItemClickListener(new OnMenuItemClickListener()
+		if (!this.currentState.isLoading)
 		{
-			public boolean onMenuItemClick(MenuItem item)
+			MenuItem newStudentId = menu.add("Verander studentnummer");
+			newStudentId.setOnMenuItemClickListener(new OnMenuItemClickListener()
 			{
-				if (currentState.timetable != null)
-		    		currentState.enteredStudentId = Integer.toString(currentState.timetable.student.id);
-		    	
-				activity.getNewStudentId("Voer hier het nieuwe studentnummer in:",
-						activity.loadTimetableUsingStudentId);
-				return true;
-			}
-		});
-		
-		MenuItem manualRefresh = menu.add("Handmatig verversen");
-		manualRefresh.setOnMenuItemClickListener(new OnMenuItemClickListener()
-		{
-			public boolean onMenuItemClick(MenuItem item)
+				public boolean onMenuItemClick(MenuItem item)
+				{
+					String defaultInput = null;
+					if (activity.currentState.timetable != null)
+			    		defaultInput = Integer.toString(activity.currentState.timetable.student.id);
+			    	
+					activity.getNewStudentId("Voer hier het nieuwe studentnummer in:", defaultInput);
+					return true;
+				}
+			});
+			
+			MenuItem manualRefresh = menu.add("Handmatig verversen");
+			manualRefresh.setOnMenuItemClickListener(new OnMenuItemClickListener()
 			{
-				if (currentState.timetable != null)
-		    	{
-		    		activity.currentState.loader = new StudentTimetableLoader(activity, true);
-					activity.currentState.loader.execute(currentState.timetable.student.id);
-		    		return true;
-		    	}
-		    	else
-		    		return false;
-			}
-		});
+				public boolean onMenuItemClick(MenuItem item)
+				{
+					State state = activity.currentState;
+					if (state.timetable != null)
+			    	{
+			    		state.loader = new StudentTimetableLoader(activity, state.timetable.student.id, true);
+						state.loader.execute();
+			    		return true;
+			    	}
+			    	else
+			    		return false;
+				}
+			});
+	        
+	        MenuItem feedback = menu.add("Feedback");
+			feedback.setOnMenuItemClickListener(new OnMenuItemClickListener()
+			{
+				public boolean onMenuItemClick(MenuItem item)
+				{
+	                // launch feedbackactivity
+	                return false;
+				}
+			});
+			
+			return true;
+		}
 		
-		return true;
+		return false;
 	}
 	
 	public Object onRetainNonConfigurationInstance()

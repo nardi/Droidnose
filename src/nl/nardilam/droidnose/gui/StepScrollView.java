@@ -25,7 +25,7 @@ public abstract class StepScrollView extends HorizontalScrollView
 				int action = event.getAction();
 				if ((action == MotionEvent.ACTION_UP
 				 || action == MotionEvent.ACTION_CANCEL)
-				 && stepSize != 0)
+				 && stepScrollView.stepSize != 0)
 				{
 					double stepPosition = (double)stepScrollView.getScrollX() / stepScrollView.stepSize;
 					double distanceFromCurrentStep = stepPosition - stepScrollView.currentStep;

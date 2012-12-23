@@ -6,13 +6,14 @@ import nl.nardilam.droidnose.Event;
 import nl.nardilam.droidnose.Orientation;
 import nl.nardilam.droidnose.Timetable;
 import nl.nardilam.droidnose.TimetableActivity;
+import nl.nardilam.droidnose.Utils;
 import nl.nardilam.droidnose.datetime.Day;
 import android.content.Context;
 import android.widget.LinearLayout;
 
 public class MultiDayView extends TimeLayout
 {
-	private static final int MIN_WIDTH_PER_DAY = 300;
+	private static final int MIN_WIDTH_PER_DAY = Utils.dpToPx(300);
 	
 	private final MultiDayView multiDayView = this;
 	
@@ -82,7 +83,7 @@ public class MultiDayView extends TimeLayout
 	{
 		if (this.containerWidth != 0)
 		{
-			this.daysOnScreen = this.containerWidth / MIN_WIDTH_PER_DAY;
+			this.daysOnScreen = Math.max(1, this.containerWidth / MIN_WIDTH_PER_DAY);
 			this.dayWidth = containerWidth / daysOnScreen;
 			
 			this.layout.removeAllViews();
@@ -92,6 +93,9 @@ public class MultiDayView extends TimeLayout
 			this.dayList.clear();
 			this.dayViews.clear();
 			
+			/*
+			 * Verzamel alle dagen waarop wat gebeurt
+			 */
 			Day lastDay = this.startDay;
 			if (!timetable.getEvents().isEmpty())
 			{
@@ -106,6 +110,10 @@ public class MultiDayView extends TimeLayout
 				}
 			}
 			
+			/*
+			 * Als er nog niet genoeg dagen zijn om het scherm te vullen,
+			 * neem nog een paar extra lege
+			 */
 			while (this.dayList.size() < daysOnScreen)
 			{
 				lastDay = lastDay.add(1);
@@ -149,12 +157,20 @@ public class MultiDayView extends TimeLayout
 		{
 			Event firstEvent = allEvents.get(0);
 			Event lastEvent = allEvents.get(allEvents.size() - 1);
+			
+			/*
+			 * Als de dag buiten het rooster ligt, return hem om
+			 * geen oneindige loop te krijgen (en toch wat te laten zien)
+			 */
 			if (fromDay.startTime.isAfter(lastEvent.startTime)
 			 || fromDay.endTime.isBefore(firstEvent.startTime))
 			{
 				return fromDay;
 			}
 			
+			/*
+			 * Blijf anders 1 bij de dag optellen totdat er iets plaatsvindt
+			 */
 			Day currentDay = fromDay;
 			List<Event> dayEvents = timetable.startDuring(currentDay);
 			while (dayEvents.isEmpty())
@@ -164,6 +180,10 @@ public class MultiDayView extends TimeLayout
 			}
 			return currentDay;
 		}
+		/*
+		 * Als er een leeg rooster gegeven wordt, geven
+		 * we de opgegeven dag maar terug
+		 */
 		else
 		{
 			return fromDay;
@@ -189,6 +209,7 @@ public class MultiDayView extends TimeLayout
 			super(context);
 			
 			this.setHorizontalScrollBarEnabled(false);
+			this.setHorizontalFadingEdgeEnabled(false);
 		}	
 		
 		private boolean measured = false;

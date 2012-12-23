@@ -47,6 +47,9 @@ public class StudentTimetable extends Timetable
         ObjectInputStream in = new ObjectInputStream(file);
         StudentTimetable timetable = (StudentTimetable)in.readObject();
         in.close();
+        /*
+         * Nog even een sort voor de zekerheid
+         */
         timetable.sort();
         return timetable;
 	}
@@ -69,24 +72,38 @@ public class StudentTimetable extends Timetable
     	return new StudentTimetable(student, new ArrayList<Event>());
     }
     
+    private static final String emptyGroupFilter = "Groups eq ''";
     private static final String groupFormat =
 		"Groups eq '%1$s'"
 	  + " or substringof('%1$s,', Groups) eq true"
 	  + " or substringof(',%1$s', Groups) eq true"
-	  + " or Groups eq ''";
+	  + " or " + emptyGroupFilter;
     
-    protected List<Event> downloadEvents(String filter) throws IOException, JSONException
+    protected List<Event> downloadEvents(String dateFilter) throws IOException, JSONException
     {
     	List<Event> events = new ArrayList<Event>();
     	
     	for (Course course : this.student.courses)
     	{
-    		String groupId = this.student.groups.get(course).identifier;
-    		String groupFilter = String.format(groupFormat, groupId);
-    		String queryUrl = "GetActivitiesByCourse?id=" + course.id
-    						+ "&$filter=(" + groupFilter + ")";
-    		if (filter != null && !filter.equals(""))
-    			queryUrl += " and (" + filter + ")";
+    		String queryUrl = "GetActivitiesByCourse?id=" + course.id + "&$filter=";
+    		boolean inGroup = this.student.groups.containsKey(course);
+    		boolean hasFilter = dateFilter != null && !dateFilter.trim().equals("");
+    		if (inGroup)
+    		{
+	    		String groupId = this.student.groups.get(course).identifier;
+	    		String groupFilter = String.format(groupFormat, groupId);
+	    		queryUrl += "(" + groupFilter + ")";
+    		}
+    		else
+    		{
+    			queryUrl += "(" + emptyGroupFilter + ")";
+    		}
+    		if (hasFilter)
+    		{
+    			if (inGroup)
+    				queryUrl += " and ";
+    			queryUrl += "(" + dateFilter + ")";
+    		}
     		queryUrl = queryUrl.replaceAll(" ", "%20");
     		DatanoseQuery activitiesByCourse = new DatanoseQuery(queryUrl);
     		List<JSONValue> results = activitiesByCourse.query();

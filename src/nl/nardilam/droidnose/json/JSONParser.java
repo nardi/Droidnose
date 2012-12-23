@@ -36,7 +36,7 @@ public class JSONParser
 		try
 		{
 			char readChar = reader.readUntil(otherData, '"', '\'', '[', '{', ',', ']', '}');
-			switch(readChar)
+			switch (readChar)
 			{
 	        	case '"':
 	        	case '\'':

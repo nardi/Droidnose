@@ -18,15 +18,25 @@
         <activity
             android:name="nl.nardilam.droidnose.TimetableActivity"
             android:label="@string/app_name"
-            android:launchMode="singleTask" >
+            android:launchMode="singleTop" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
-            android:name="nl.nardilam.droidnose.ChooseDateActivity"
+            android:name=".ChooseDateActivity"
             android:label="Kies een datum" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="nl.nardilam.droidnose.TimetableActivity" />
+        </activity>
+        <activity
+            android:name=".StudentIdActivity"
+            android:label="Nieuw studentnummer" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="nl.nardilam.droidnose.TimetableActivity" />
         </activity>
     </application>
 
