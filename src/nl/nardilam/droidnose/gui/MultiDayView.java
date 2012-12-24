@@ -93,7 +93,7 @@ public class MultiDayView extends TimeLayout
 			this.dayList.clear();
 			this.dayViews.clear();
 			
-			this.addDays();
+			this.fillDays();
 			
 			final int startDayIndex = daysOnScreen;
 			this.setScrollBars(startDayIndex + daysOnScreen - 1);
@@ -108,7 +108,42 @@ public class MultiDayView extends TimeLayout
 		}
 	}
 	
-	private Day getFirstNonEmptyDay(Day fromDay, int direction)
+	private int fillDays()
+	{
+		if (this.dayList.isEmpty())
+		{
+			this.startDay = this.getFirstNonEmptyDay(this.startDay, 1);
+			this.addDay(this.startDay);
+		}
+		
+		int startDayIndex = this.dayList.indexOf(this.startDay);
+		int preDays = Math.max(daysOnScreen - startDayIndex, 0);
+		int numDays = this.dayList.size();
+		int postDays = Math.max((2 * daysOnScreen) - (numDays - startDayIndex), 0);
+		
+		for (Day day : this.getNonEmptyDays(dayList.get(0), -1, preDays))
+			this.addDay(day, 0);
+		
+		for (Day day : this.getNonEmptyDays(dayList.get(dayList.size() - 1), 1, postDays))
+			this.addDay(day);
+		
+		return preDays;
+	}
+	
+	private List<Day> getNonEmptyDays(Day fromDay, int searchDirection, int amount)
+	{
+		List<Day> days = new ArrayList<Day>();
+		Day currentDay = fromDay;
+		for (int i = 0; i < amount; i++)
+		{
+			currentDay = currentDay.add(searchDirection);
+			currentDay = this.getFirstNonEmptyDay(currentDay, searchDirection);
+			days.add(currentDay);
+		}
+		return days;
+	}
+		
+	private Day getFirstNonEmptyDay(Day fromDay, int searchDirection)
 	{
 		List<Event> allEvents = this.timetable.getEvents();
 		if (!allEvents.isEmpty())
@@ -133,7 +168,7 @@ public class MultiDayView extends TimeLayout
 			List<Event> dayEvents = timetable.startDuring(currentDay);
 			while (dayEvents.isEmpty())
 			{
-				currentDay = currentDay.add(direction);
+				currentDay = currentDay.add(searchDirection);
 				dayEvents = timetable.startDuring(currentDay);
 			}
 			return currentDay;
@@ -148,54 +183,17 @@ public class MultiDayView extends TimeLayout
 		}
 	}
 	
-	private int addDays()
+	private void addDay(Day day)
 	{
-		if (this.dayList.isEmpty())
-		{
-			this.startDay = this.getFirstNonEmptyDay(this.startDay, 1);
-			this.dayList.add(this.startDay);
-			
-			DayView dayView = this.makeDayView(this.startDay);
-			this.dayViews.add(dayView);
-			this.layout.addView(dayView);
-		}
-		
-		int startDayIndex = this.dayList.indexOf(this.startDay);
-		int preDays = Math.max(daysOnScreen - startDayIndex, 0);
-		int numDays = this.dayList.size();
-		int postDays = Math.max((2 * daysOnScreen) - (numDays - startDayIndex), 0);
-		
-		if (preDays > 0)
-		{
-			Day currentDay = this.dayList.get(0);
-			for (int i = 0; i < preDays; i++)
-			{
-				currentDay = currentDay.add(-1);
-				currentDay = this.getFirstNonEmptyDay(currentDay, -1);
-				this.dayList.add(0, currentDay);
-				
-				DayView dayView = this.makeDayView(currentDay);
-				this.dayViews.add(0, dayView);
-				this.layout.addView(dayView, 0);
-			}
-		}
-		
-		if (postDays > 0)
-		{
-			Day currentDay = this.dayList.get(this.dayList.size() - 1);
-			for (int i = 0; i < postDays; i++)
-			{
-				currentDay = currentDay.add(1);
-				currentDay = this.getFirstNonEmptyDay(currentDay, 1);
-				this.dayList.add(currentDay);
-				
-				DayView dayView = this.makeDayView(currentDay);
-				this.dayViews.add(dayView);
-				this.layout.addView(dayView);				
-			}
-		}
-		
-		return preDays;
+		this.addDay(day, this.dayList.size());
+	}
+	
+	private void addDay(Day day, int location)
+	{
+		this.dayList.add(location, day);
+		DayView dayView = this.makeDayView(day);
+		this.dayViews.add(location, dayView);
+		this.layout.addView(dayView, location);		
 	}
 	
 	private DayView makeDayView(Day day)
@@ -248,7 +246,7 @@ public class MultiDayView extends TimeLayout
 		protected void onStepChange(int step)
 		{
 			multiDayView.setStartDay(multiDayView.dayList.get(step));
-			int dayOffset = multiDayView.addDays();
+			int dayOffset = multiDayView.fillDays();
 			
 			int rightDayViewIndex = dayOffset + step + multiDayView.daysOnScreen - 1;
 			multiDayView.setScrollBars(rightDayViewIndex);
