@@ -9,6 +9,7 @@ import android.widget.ScrollView;
 
 public class LinkedScrollView extends ScrollView
 {
+	private final LinkedScrollView linkedScrollView = this;
 	private final Set<LinkedScrollView> links;
 	private final Collection<LinkedScrollView> scrollOrigin;
 	
@@ -19,12 +20,19 @@ public class LinkedScrollView extends ScrollView
 		this.scrollOrigin = new ArrayList<LinkedScrollView>();
 	}
 	
-	public void linkTo(LinkedScrollView lsv)
+	public void linkTo(final LinkedScrollView lsv)
 	{
 		if (lsv != null)
 		{
 			links.add(lsv);
-			lsv.links.add(this);
+			lsv.links.add(linkedScrollView);
+			this.post(new Runnable()
+			{
+				public void run()
+				{
+					linkedScrollView.scrollTo(lsv.getScrollX(), lsv.getScrollY());
+				}
+			});			
 		}
 	}
 	

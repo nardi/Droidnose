@@ -93,64 +93,22 @@ public class MultiDayView extends TimeLayout
 			this.dayList.clear();
 			this.dayViews.clear();
 			
-			/*
-			 * Verzamel alle dagen waarop wat gebeurt
-			 */
-			Day lastDay = this.startDay;
-			if (!timetable.getEvents().isEmpty())
-			{
-				List<Event> events = this.timetable.getEvents();
-				
-				for (Event e : events)
-				{
-					Day eventDay = e.startTime.getDay();
-					if (!this.dayList.contains(eventDay))
-						this.dayList.add(eventDay);
-					lastDay = eventDay;
-				}
-			}
+			this.addDays();
 			
-			/*
-			 * Als er nog niet genoeg dagen zijn om het scherm te vullen,
-			 * neem nog een paar extra lege
-			 */
-			while (this.dayList.size() < daysOnScreen)
-			{
-				lastDay = lastDay.add(1);
-				this.dayList.add(lastDay);
-			}
-			
-			Context context = this.getContext();
-			LayoutParams dayParams = new LayoutParams(this.dayWidth, LayoutParams.WRAP_CONTENT);
-			
-			for (Day day : multiDayView.dayList)
-			{
-				DayView dayView = new DayView(context, timetable, day, hourView);
-				dayView.setHourHeight(multiDayView.getHourHeight());
-				multiDayView.dayViews.add(dayView);
-				multiDayView.layout.addView(dayView, dayParams);
-			}
-			
-			int startDayIndex = this.dayList.indexOf(this.startDay);
-			if (startDayIndex == -1)
-			{
-				startDayIndex = this.dayList.indexOf(this.getNextNonEmptyDay(this.startDay, 1));
-			}
+			final int startDayIndex = daysOnScreen;
 			this.setScrollBars(startDayIndex + daysOnScreen - 1);
-			
-			final int startDayStep = startDayIndex;
 			this.scrollView.post(new Runnable()
 			{
 				public void run()
 				{
-					multiDayView.scrollView.scrollToStep(startDayStep);
+					multiDayView.scrollView.scrollToStep(startDayIndex);
 					multiDayView.scrollView.setVisibility(VISIBLE);
 				}
 			});
 		}
 	}
 	
-	private Day getNextNonEmptyDay(Day fromDay, int direction)
+	private Day getFirstNonEmptyDay(Day fromDay, int direction)
 	{
 		List<Event> allEvents = this.timetable.getEvents();
 		if (!allEvents.isEmpty())
@@ -188,6 +146,65 @@ public class MultiDayView extends TimeLayout
 		{
 			return fromDay;
 		}
+	}
+	
+	private int addDays()
+	{
+		if (this.dayList.isEmpty())
+		{
+			this.startDay = this.getFirstNonEmptyDay(this.startDay, 1);
+			this.dayList.add(this.startDay);
+			
+			DayView dayView = this.makeDayView(this.startDay);
+			this.dayViews.add(dayView);
+			this.layout.addView(dayView);
+		}
+		
+		int startDayIndex = this.dayList.indexOf(this.startDay);
+		int preDays = Math.max(daysOnScreen - startDayIndex, 0);
+		int numDays = this.dayList.size();
+		int postDays = Math.max((2 * daysOnScreen) - (numDays - startDayIndex), 0);
+		
+		if (preDays > 0)
+		{
+			Day currentDay = this.dayList.get(0);
+			for (int i = 0; i < preDays; i++)
+			{
+				currentDay = currentDay.add(-1);
+				currentDay = this.getFirstNonEmptyDay(currentDay, -1);
+				this.dayList.add(0, currentDay);
+				
+				DayView dayView = this.makeDayView(currentDay);
+				this.dayViews.add(0, dayView);
+				this.layout.addView(dayView, 0);
+			}
+		}
+		
+		if (postDays > 0)
+		{
+			Day currentDay = this.dayList.get(this.dayList.size() - 1);
+			for (int i = 0; i < postDays; i++)
+			{
+				currentDay = currentDay.add(1);
+				currentDay = this.getFirstNonEmptyDay(currentDay, 1);
+				this.dayList.add(currentDay);
+				
+				DayView dayView = this.makeDayView(currentDay);
+				this.dayViews.add(dayView);
+				this.layout.addView(dayView);				
+			}
+		}
+		
+		return preDays;
+	}
+	
+	private DayView makeDayView(Day day)
+	{
+		DayView dayView = new DayView(this.getContext(), timetable, day, hourView);
+		dayView.setHourHeight(this.getHourHeight());
+		LayoutParams dayParams = new LayoutParams(this.dayWidth, LayoutParams.WRAP_CONTENT);
+		dayView.setLayoutParams(dayParams);
+		return dayView;
 	}
 	
 	public void setScrollBars(int rightDayViewIndex)
@@ -230,10 +247,13 @@ public class MultiDayView extends TimeLayout
 
 		protected void onStepChange(int step)
 		{
-			int rightDayViewIndex = step + multiDayView.daysOnScreen - 1;
+			multiDayView.setStartDay(multiDayView.dayList.get(step));
+			int dayOffset = multiDayView.addDays();
+			
+			int rightDayViewIndex = dayOffset + step + multiDayView.daysOnScreen - 1;
 			multiDayView.setScrollBars(rightDayViewIndex);
 			
-			multiDayView.setStartDay(multiDayView.dayList.get(step));
+			this.scrollToStep(step + dayOffset);
 		}
 	}
 }
