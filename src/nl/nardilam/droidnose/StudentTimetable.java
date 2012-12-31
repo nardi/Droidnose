@@ -23,7 +23,11 @@ public class StudentTimetable extends Timetable
 {    
 	private static final long serialVersionUID = 1L;
 	
-	public final Student student;
+	private Student student;
+	public Student getStudent()
+	{
+		return this.student;
+	}
     
     private StudentTimetable(Student student, List<Event> events)
     {
@@ -31,12 +35,34 @@ public class StudentTimetable extends Timetable
         this.student = student;
     }
     
+    public void update(Callback<List<Event>> whenDone,  List<Day> daysToUpdate)
+    {
+    	/*
+    	 * Eerst controleren of de studentinformatie
+    	 * niet geupdatet moet worden
+    	 */
+    	if (!this.student.creationTime.add(Duration.hours(24)).isAfter(Time.now()))
+    	{
+    		try
+			{
+				this.student = Student.download(this.student.id);
+			}
+    		catch (Exception e)
+			{
+				whenDone.onError(e);
+				return;
+			}
+    	}
+    	
+    	super.update(whenDone, daysToUpdate);
+    }
+    
     public void saveToFile(String filename) throws ContextNotSetException, IOException
 	{
     	Context context = Utils.getContext();
     	FileOutputStream file = context.openFileOutput(filename, Context.MODE_PRIVATE);
         ObjectOutputStream out = new ObjectOutputStream(file);
-        out.writeObject(this); 
+        out.writeObject(this);
         out.close();
 	}
 	
@@ -60,11 +86,9 @@ public class StudentTimetable extends Timetable
     			+ super.toString();
     }
     
-    public static StudentTimetable download(Student student) throws Exception
+    public static StudentTimetable empty(int studentId) throws IOException, JSONException
     {
-    	StudentTimetable t = StudentTimetable.initialize(student);
-    	t.update(null);
-    	return t;
+    	return StudentTimetable.initialize(Student.download(studentId));
     }
     
     public static StudentTimetable initialize(Student student)

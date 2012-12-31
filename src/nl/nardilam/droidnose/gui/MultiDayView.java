@@ -2,12 +2,14 @@ package nl.nardilam.droidnose.gui;
 
 import java.util.ArrayList;
 import java.util.List;
+import nl.nardilam.droidnose.Callback;
 import nl.nardilam.droidnose.Event;
 import nl.nardilam.droidnose.Orientation;
 import nl.nardilam.droidnose.Timetable;
 import nl.nardilam.droidnose.TimetableActivity;
 import nl.nardilam.droidnose.Utils;
 import nl.nardilam.droidnose.datetime.Day;
+import nl.nardilam.droidnose.datetime.WeekDay;
 import android.content.Context;
 import android.widget.LinearLayout;
 
@@ -55,7 +57,7 @@ public class MultiDayView extends TimeLayout
 		 * moet de HourView hiervan op de hoogte zijn om zich uit te breiden
 		 */
 		int startHour = TimeLayout.DEFAULT_STARTHOUR,
-			endHour =  TimeLayout.DEFAULT_ENDHOUR;
+			endHour = TimeLayout.DEFAULT_ENDHOUR;
 		for (Event e : timetable.getEvents())
 		{
 			Day day = e.startTime.getDay();
@@ -78,6 +80,23 @@ public class MultiDayView extends TimeLayout
 			activity.currentState.startDay = this.startDay;
 		}
 	}
+	
+	private final Callback<List<Event>> onUpdate = new Callback<List<Event>>()
+	{
+		public void onResult(List<Event> result)
+		{
+			/*
+			 * Check if new days need to be added to the view
+			 * or hourRanges need to be changed
+			 */
+			//multiDayView.update();
+		}
+
+		public void onError(Exception e)
+		{
+			//Well, too bad!
+		}
+	};
 	
 	protected void update()
 	{
@@ -145,6 +164,19 @@ public class MultiDayView extends TimeLayout
 		
 	private Day getFirstNonEmptyDay(Day fromDay, int searchDirection)
 	{
+		if (fromDay.getWeekDay() == WeekDay.Saturday)
+		{
+			return searchDirection == 1 ? fromDay.add(2) : fromDay.add(-1);
+		}
+		else if (fromDay.getWeekDay() == WeekDay.Sunday)
+		{
+			return searchDirection == 1 ? fromDay.add(1) : fromDay.add(-2);
+		}
+		else if (true)
+		{
+			return fromDay;
+		}
+		
 		List<Event> allEvents = this.timetable.getEvents();
 		if (!allEvents.isEmpty())
 		{
@@ -165,11 +197,11 @@ public class MultiDayView extends TimeLayout
 			 * Blijf anders 1 bij de dag optellen totdat er iets plaatsvindt
 			 */
 			Day currentDay = fromDay;
-			List<Event> dayEvents = timetable.startDuring(currentDay);
+			List<Event> dayEvents = timetable.startDuring(currentDay, onUpdate);
 			while (dayEvents.isEmpty())
 			{
 				currentDay = currentDay.add(searchDirection);
-				dayEvents = timetable.startDuring(currentDay);
+				dayEvents = timetable.startDuring(currentDay, onUpdate);
 			}
 			return currentDay;
 		}

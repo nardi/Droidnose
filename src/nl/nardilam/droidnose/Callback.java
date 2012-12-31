@@ -6,4 +6,5 @@ package nl.nardilam.droidnose;
 public interface Callback<ResultType>
 {
 	public void onResult(ResultType result);
+	public void onError(Exception e);
 }

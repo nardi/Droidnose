@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import nl.nardilam.droidnose.datetime.Time;
 import nl.nardilam.droidnose.json.JSONException;
 import nl.nardilam.droidnose.json.JSONValue;
 import nl.nardilam.droidnose.net.DatanoseQuery;
@@ -18,12 +19,14 @@ public class Student implements Serializable
 	public final int id;
 	public final List<Course> courses;
 	public final Map<Course, Group> groups;
+	public final Time creationTime;
 	
 	private Student(int id, List<Course> courses, Map<Course, Group> groups)
 	{
 		this.id = id;
 		this.courses = courses;
 		this.groups = groups;
+		this.creationTime = Time.now();
 	}
 	
 	public static Student download(int studentId) throws IOException, JSONException

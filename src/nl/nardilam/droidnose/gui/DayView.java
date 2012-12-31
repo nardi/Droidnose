@@ -7,12 +7,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import nl.nardilam.droidnose.ContextCallback;
 import nl.nardilam.droidnose.Event;
 import nl.nardilam.droidnose.Orientation;
 import nl.nardilam.droidnose.Timetable;
 import nl.nardilam.droidnose.datetime.Day;
 import android.content.Context;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 
 public class DayView extends TimeLayout
@@ -37,7 +39,22 @@ public class DayView extends TimeLayout
 		this.hourView = hourView;
 		
 		this.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+		
+		this.onUpdate.setContext(this);
 	}
+	
+	private final ContextCallback<List<Event>, TimeLayout> onUpdate = new ContextCallback<List<Event>, TimeLayout>()
+	{
+		public void onResult(List<Event> result, TimeLayout context)
+		{
+			context.update();
+		}
+
+		public void onError(Exception e)
+		{
+			//show message or something
+		}
+	};
 	
 	protected void update()
 	{
@@ -59,32 +76,48 @@ public class DayView extends TimeLayout
 		layout.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, numHours * hourHeight));
 		dayScrollView.addView(layout); 
 		
-		List<Set<Event>> eventGroups = this.groupEvents(this.timetable.startDuring(day));
+		List<Event> dayEvents = this.timetable.startDuring(day, onUpdate);
 		
-		for (Set<Event> eventGroup : eventGroups)
+		if (dayEvents.isEmpty() && timetable.getUpdatingDays().contains(day))
 		{
-			Event firstEvent = Collections.min(eventGroup);
-			double groupStart = this.day.startTime.timeTo(firstEvent.startTime).inHours();
+			ProgressBar pBar = new ProgressBar(context);
+	        pBar.setIndeterminate(true);
+	        
+	        RelativeLayout.LayoutParams params =
+					new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+			params.addRule(RelativeLayout.CENTER_IN_PARENT);
 			
-			LinearLayout horizontalEvents = new LinearLayout(context);
-		    horizontalEvents.setOrientation(Orientation.HORIZONTAL);
+	        layout.addView(pBar, params);
+		}
+		else
+		{			
+			List<Set<Event>> eventGroups = this.groupEvents(dayEvents);
 			
-			RelativeLayout.LayoutParams groupParams =
-					new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-			
-			groupParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
-			
-			double emptyTime = groupStart - this.getStartHour();
-			groupParams.topMargin = (int)(emptyTime * hourHeight);
-			
-			for (Event event : eventGroup)
+			for (Set<Event> eventGroup : eventGroups)
 			{
-				EventView ev = new EventView(context, event);
-				ev.setHourHeight(hourHeight);
-				horizontalEvents.addView(ev);
+				Event firstEvent = Collections.min(eventGroup);
+				double groupStart = this.day.startTime.timeTo(firstEvent.startTime).inHours();
+				
+				LinearLayout horizontalEvents = new LinearLayout(context);
+			    horizontalEvents.setOrientation(Orientation.HORIZONTAL);
+				
+				RelativeLayout.LayoutParams groupParams =
+						new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+				
+				groupParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+				
+				double emptyTime = groupStart - this.getStartHour();
+				groupParams.topMargin = (int)(emptyTime * hourHeight);
+				
+				for (Event event : eventGroup)
+				{
+					EventView ev = new EventView(context, event);
+					ev.setHourHeight(hourHeight);
+					horizontalEvents.addView(ev);
+				}
+				
+				layout.addView(horizontalEvents, groupParams);
 			}
-			
-			layout.addView(horizontalEvents, groupParams);
 		}
 	}
 	

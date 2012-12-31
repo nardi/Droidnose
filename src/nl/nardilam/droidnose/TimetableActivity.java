@@ -1,7 +1,8 @@
 package nl.nardilam.droidnose;
 
+import java.util.List;
+
 import nl.nardilam.droidnose.datetime.Day;
-import nl.nardilam.droidnose.datetime.Time;
 import nl.nardilam.droidnose.datetime.TimeUtils;
 import nl.nardilam.droidnose.gui.LoadingView;
 import nl.nardilam.droidnose.gui.TimetableView;
@@ -13,7 +14,6 @@ import android.content.SharedPreferences.Editor;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MenuItem.OnMenuItemClickListener;
-import android.view.View;
 
 public class TimetableActivity extends Activity
 {
@@ -67,23 +67,7 @@ public class TimetableActivity extends Activity
 		}
 	}
 	
-	/*
-	 * Deze methode wordt bij hervatten van de applicatie aangeroepen
-	 * om indien nodig het rooster opnieuw te downloaden 
-	 */
-	public void onWindowFocusChanged(boolean hasFocus)
-	{
-		super.onWindowFocusChanged(hasFocus);
-		
-		StudentTimetable currentTimetable = currentState.timetable;
-		if (currentTimetable != null
-		 && currentTimetable.lastFullUpdate.timeTo(Time.now()).inHours() >= 24)
-		{
-			this.currentState.loader = new StudentTimetableLoader(this, currentTimetable.student.id);
-			this.currentState.loader.execute();
-		}
-	}
-	
+	@SuppressWarnings("deprecation")
 	private void tryRestoreState()
 	{
 		State lastState = (State)this.getLastNonConfigurationInstance();
@@ -170,7 +154,7 @@ public class TimetableActivity extends Activity
 		this.currentState.loader = null;
 		
 		Editor settingsEditor = this.getSharedPreferences(PREFERENCES_FILE, MODE_PRIVATE).edit();
-		settingsEditor.putInt(STUDENTID, timetable.student.id);
+		settingsEditor.putInt(STUDENTID, timetable.getStudent().id);
 		settingsEditor.commit();
 	}
 	
@@ -198,55 +182,63 @@ public class TimetableActivity extends Activity
 		super.onActivityResult(requestCode, resultCode, data);
 	}
 	
-	public boolean onPrepareOptionsMenu(Menu menu)
+	private MenuItem[] menuItems = new MenuItem[3];
+	
+	public boolean onCreateOptionsMenu(Menu menu)
 	{
-		if (!this.currentState.isLoading)
+		MenuItem newStudentId = menu.add("Verander studentnummer");
+		newStudentId.setOnMenuItemClickListener(new OnMenuItemClickListener()
 		{
-			MenuItem newStudentId = menu.add("Verander studentnummer");
-			newStudentId.setOnMenuItemClickListener(new OnMenuItemClickListener()
+			public boolean onMenuItemClick(MenuItem item)
 			{
-				public boolean onMenuItemClick(MenuItem item)
-				{
-					String defaultInput = null;
-					if (activity.currentState.timetable != null)
-			    		defaultInput = Integer.toString(activity.currentState.timetable.student.id);
-			    	
-					activity.getNewStudentId("Voer hier het nieuwe studentnummer in:", defaultInput);
-					return true;
-				}
-			});
-			
-			MenuItem manualRefresh = menu.add("Handmatig verversen");
-			manualRefresh.setOnMenuItemClickListener(new OnMenuItemClickListener()
-			{
-				public boolean onMenuItemClick(MenuItem item)
-				{
-					State state = activity.currentState;
-					if (state.timetable != null)
-			    	{
-			    		state.loader = new StudentTimetableLoader(activity, state.timetable.student.id, true);
-						state.loader.execute();
-			    		return true;
-			    	}
-			    	else
-			    		return false;
-				}
-			});
-	        
-	        MenuItem feedback = menu.add("Feedback");
-			feedback.setOnMenuItemClickListener(new OnMenuItemClickListener()
-			{
-				public boolean onMenuItemClick(MenuItem item)
-				{
-	                // launch feedbackactivity
-	                return false;
-				}
-			});
-			
-			return true;
-		}
+				String defaultInput = null;
+				if (activity.currentState.timetable != null)
+		    		defaultInput = Integer.toString(activity.currentState.timetable.getStudent().id);
+		    	
+				activity.getNewStudentId("Voer hier het nieuwe studentnummer in:", defaultInput);
+				return true;
+			}
+		});
+		this.menuItems[0] = newStudentId;
 		
-		return false;
+		MenuItem manualRefresh = menu.add("Handmatig verversen");
+		manualRefresh.setOnMenuItemClickListener(new OnMenuItemClickListener()
+		{
+			public boolean onMenuItemClick(MenuItem item)
+			{
+				State state = activity.currentState;
+				if (state.timetable != null)
+		    	{
+		    		state.loader = new StudentTimetableLoader(activity, state.timetable.getStudent().id, true);
+					state.loader.execute();
+		    		return true;
+		    	}
+		    	else
+		    		return false;
+			}
+		});
+		this.menuItems[1] = manualRefresh;
+        
+        MenuItem feedback = menu.add("Feedback");
+		feedback.setOnMenuItemClickListener(new OnMenuItemClickListener()
+		{
+			public boolean onMenuItemClick(MenuItem item)
+			{
+                // launch feedbackactivity
+                return false;
+			}
+		});	
+		this.menuItems[2] = feedback;
+		
+		return true;
+	}
+	
+	public boolean onPrepareOptionsMenu(Menu menu)
+	{		
+		for (MenuItem m : this.menuItems)
+			m.setVisible(!this.currentState.isLoading);
+		
+		return true;
 	}
 	
 	public Object onRetainNonConfigurationInstance()
@@ -257,5 +249,23 @@ public class TimetableActivity extends Activity
 			currentState.loader.setActivity(null);
 		}
 		return currentState;
+	}
+	
+	protected void onDestroy()
+	{        
+	    super.onDestroy();
+	    
+	    if (currentState.timetable != null)
+	    {
+	    	for (Callback<List<Event>> c : currentState.timetable.getUpdateHandlers())
+	    	{
+	    		if (c instanceof ContextCallback<?, ?>)
+	    		{
+	    			@SuppressWarnings("unchecked")
+					ContextCallback<List<Event>, Object> cc = (ContextCallback<List<Event>, Object>)c;
+	    			cc.setContext(null);
+	    		}
+	    	}
+	    }
 	}
 }
