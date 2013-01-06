@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
@@ -17,7 +18,7 @@ import android.widget.DatePicker;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
-public class ChooseDateActivity extends Activity
+public class ChooseDateActivity extends ContextActivity
 {
 	public static final String YEAR = "nl.nardilam.droidnose.Year";
 	public static final String MONTH = "nl.nardilam.droidnose.Month"; 
@@ -29,7 +30,7 @@ public class ChooseDateActivity extends Activity
 	public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-
+        
         RelativeLayout layout = new RelativeLayout(this);
         
         LinearLayout linearLayout = new LinearLayout(this);
@@ -56,6 +57,10 @@ public class ChooseDateActivity extends Activity
 				datePicker.setCalendarViewShown(false);
 				datePicker.setSpinnersShown(true);
 			}
+			
+			float density = Utils.getScreenDensity();
+			datePicker.setScaleX(density);
+	        datePicker.setScaleY(density);
 		}
         
         Button finished = new Button(this);
@@ -73,11 +78,13 @@ public class ChooseDateActivity extends Activity
 			}
         };
         finished.setOnClickListener(onFinished);
+        finished.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+        finished.setGravity(Gravity.CENTER);
         
         Day selectedDay = createDayFromIntent(this.getIntent());
         datePicker.init(selectedDay.year, selectedDay.month - 1, selectedDay.day, null);
         
-        linearLayout.addView(datePicker);
+        linearLayout.addView(datePicker, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
         linearLayout.addView(finished);
         
         RelativeLayout.LayoutParams layoutParams =

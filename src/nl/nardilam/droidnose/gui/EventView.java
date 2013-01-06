@@ -20,6 +20,9 @@ public class EventView extends TimeLayout
 		super(context, 0, 0);
 		
 		this.event = event;
+		
+		LayoutParams params = new LayoutParams(0, 0, 0.5f);
+		this.setLayoutParams(params);
 	}
 	
 	protected void update()
@@ -32,7 +35,8 @@ public class EventView extends TimeLayout
 		double numHours = event.duration().inHours();
 		
 		int height = (int)(hourHeight * numHours);
-		LayoutParams params = new LayoutParams(0, height, 0.5f);
+		LayoutParams params = (LayoutParams)this.getLayoutParams();
+		params.height = height;
 		this.setLayoutParams(params);
 		
 		this.layout = new RelativeLayout(context);

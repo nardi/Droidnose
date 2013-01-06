@@ -1,14 +1,14 @@
 package nl.nardilam.droidnose;
 
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import android.content.Context;
+import android.os.AsyncTask;
 
 import nl.nardilam.droidnose.datetime.Day;
 import nl.nardilam.droidnose.datetime.Duration;
@@ -23,6 +23,8 @@ public class StudentTimetable extends Timetable
 {    
 	private static final long serialVersionUID = 1L;
 	
+	private final StudentTimetable timetable = this;
+	
 	private Student student;
 	public Student getStudent()
 	{
@@ -35,36 +37,79 @@ public class StudentTimetable extends Timetable
         this.student = student;
     }
     
-    public void update(Callback<List<Event>> whenDone,  List<Day> daysToUpdate)
+    public void update(final Callback<DayEvents> whenDone,  final List<Day> daysToUpdate)
     {
     	/*
     	 * Eerst controleren of de studentinformatie
     	 * niet geupdatet moet worden
     	 */
     	if (!this.student.creationTime.add(Duration.hours(24)).isAfter(Time.now()))
-    	{
-    		try
+    	{    			
+    		this.updateStudentInfo(new Callback<Student>()
 			{
-				this.student = Student.download(this.student.id);
-			}
-    		catch (Exception e)
-			{
-				whenDone.onError(e);
-				return;
-			}
+				public void onResult(Student result)
+				{
+					timetable.update(whenDone, daysToUpdate);
+				}
+
+				public void onError(Exception e)
+				{
+					whenDone.onError(e);
+				}
+			});
     	}
-    	
-    	super.update(whenDone, daysToUpdate);
+    	else
+    	{
+    		super.update(whenDone, daysToUpdate);
+    	}
     }
     
-    public void saveToFile(String filename) throws ContextNotSetException, IOException
-	{
-    	Context context = Utils.getContext();
-    	FileOutputStream file = context.openFileOutput(filename, Context.MODE_PRIVATE);
-        ObjectOutputStream out = new ObjectOutputStream(file);
-        out.writeObject(this);
-        out.close();
-	}
+    public void updateStudentInfo(Callback<Student> whenDone)
+    {
+    	new StudentDownloader(whenDone).execute();
+    }
+    
+    private class StudentDownloader extends AsyncTask<Void, Void, Student>
+    {
+    	private final Callback<Student> callback;
+    	private Exception fatalException = null;
+    	
+    	public StudentDownloader(Callback<Student> callback)
+    	{
+    		this.callback = callback;
+    	}
+    	
+		protected Student doInBackground(Void... nothings)
+		{
+	    	try
+			{
+				return Student.download(timetable.student.id);
+			}
+	    	catch (Exception e)
+			{
+	    		this.fatalException = e;
+				return null;
+			}
+		}
+		
+		protected void onPostExecute(Student student)
+		{
+			if (student != null)
+			{
+				timetable.student = student;
+				this.callback.onResult(student);
+			}
+			else
+			{
+				this.callback.onError(this.fatalException);
+			}
+		}
+    }
+    
+    public void saveToFile() throws ContextNotSetException, IOException
+    {
+    	this.saveToFile(Integer.toString(this.getStudent().id));
+    }
 	
 	public static StudentTimetable loadFromFile(String filename) throws ContextNotSetException, IOException, ClassNotFoundException
 	{
@@ -124,9 +169,7 @@ public class StudentTimetable extends Timetable
     		}
     		if (hasFilter)
     		{
-    			if (inGroup)
-    				queryUrl += " and ";
-    			queryUrl += "(" + dateFilter + ")";
+				queryUrl += " and (" + dateFilter + ")";
     		}
     		queryUrl = queryUrl.replaceAll(" ", "%20");
     		DatanoseQuery activitiesByCourse = new DatanoseQuery(queryUrl);
@@ -139,13 +182,23 @@ public class StudentTimetable extends Timetable
 				/*
 				 * Locaties ophalen kost erg veel requests en tijd, kan
 				 * waarschijnlijk sneller als batchrequest gedaan worden
+				 * Ook moet dit een lijst worden
 				 */
 				String location = Event.DEFAULT_LOCATION;
 				DatanoseQuery locationsByActivity = new DatanoseQuery("GetLocationsByActivity?id="
 						+ (int)activity.get("ID").asNumber());
 				List<JSONValue> locations = locationsByActivity.query();
 				if (!locations.isEmpty())
-					location = locations.get(0).asObject().get("Name").asString();
+				{
+					location = "";
+					Iterator<JSONValue> locationIterator = locations.iterator();
+					while (locationIterator.hasNext())
+					{
+						location += locationIterator.next().asObject().get("Name").asString();
+						if (locationIterator.hasNext())
+							location += ", ";
+					}
+				}
     			
 				EventType type = EventType.parse(activity.get("ActivityType").asString());
 				

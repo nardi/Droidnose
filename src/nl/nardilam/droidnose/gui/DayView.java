@@ -11,11 +11,15 @@ import nl.nardilam.droidnose.ContextCallback;
 import nl.nardilam.droidnose.Event;
 import nl.nardilam.droidnose.Orientation;
 import nl.nardilam.droidnose.Timetable;
+import nl.nardilam.droidnose.Utils;
 import nl.nardilam.droidnose.datetime.Day;
 import android.content.Context;
+import android.text.TextUtils.TruncateAt;
+import android.view.Gravity;
+import android.view.View;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 public class DayView extends TimeLayout
 {
@@ -24,10 +28,12 @@ public class DayView extends TimeLayout
 	private final HourView hourView;
 	
 	private LinkedScrollView dayScrollView = null;
+	private Exception errorUpdating = null;
 	
 	public void setVerticalScrollBarEnabled(boolean enabled)
 	{
-		this.dayScrollView.setVerticalScrollBarEnabled(enabled);
+		if (this.dayScrollView != null)
+			this.dayScrollView.setVerticalScrollBarEnabled(enabled);
 	}
 	
 	public DayView(Context context, Timetable timetable, Day day, HourView hourView)
@@ -38,21 +44,23 @@ public class DayView extends TimeLayout
 		this.day = day;
 		this.hourView = hourView;
 		
-		this.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+		this.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 		
 		this.onUpdate.setContext(this);
 	}
 	
-	private final ContextCallback<List<Event>, TimeLayout> onUpdate = new ContextCallback<List<Event>, TimeLayout>()
+	private final ContextCallback<Timetable.DayEvents, DayView> onUpdate = new ContextCallback<Timetable.DayEvents, DayView>()
 	{
-		public void onResult(List<Event> result, TimeLayout context)
+		public void onResult(Timetable.DayEvents result, DayView context)
 		{
+			context.errorUpdating = null;
 			context.update();
 		}
 
-		public void onError(Exception e)
+		public void onError(Exception e, DayView context)
 		{
-			//show message or something
+			context.errorUpdating = e;
+			context.update();
 		}
 	};
 	
@@ -66,57 +74,87 @@ public class DayView extends TimeLayout
 		DateTitleView dtView = new DateTitleView(context, day);
 		this.addView(dtView);
 		
-		dayScrollView = new LinkedScrollView(context);
-		dayScrollView.linkTo(this.hourView.getScrollView());
-		this.addView(dayScrollView);
-		
-		RelativeLayout layout = new RelativeLayout(context);
-		layout.setPadding(0, hourHeight / 2, 0, 0);
-		int numHours = this.getEndHour() - this.getStartHour() + 1;
-		layout.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, numHours * hourHeight));
-		dayScrollView.addView(layout); 
-		
-		List<Event> dayEvents = this.timetable.startDuring(day, onUpdate);
-		
-		if (dayEvents.isEmpty() && timetable.getUpdatingDays().contains(day))
+		if (this.errorUpdating != null)
 		{
-			ProgressBar pBar = new ProgressBar(context);
-	        pBar.setIndeterminate(true);
-	        
-	        RelativeLayout.LayoutParams params =
-					new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-			params.addRule(RelativeLayout.CENTER_IN_PARENT);
-			
-	        layout.addView(pBar, params);
+			TextView errorText = new TextView(context);
+			errorText.setText("Er is een fout opgetreden:\n\n"
+					  		+ this.errorUpdating + "\n\n"
+					  		+ "Raak deze tekst aan om het opnieuw te proberen.");
+			errorText.setGravity(Gravity.CENTER);
+			errorText.setEllipsize(TruncateAt.MIDDLE);
+			errorText.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+			final int padding = Utils.dpToPx(40);
+			errorText.setPadding(padding, 0, padding, 0);
+			errorText.setClickable(true);
+			errorText.setOnClickListener(new View.OnClickListener()
+			{
+				@Override
+				public void onClick(View v)
+				{
+					errorUpdating = null;
+					timetable.updateIfNeeded(onUpdate, day);
+					update();
+				}
+			});
+			this.addView(errorText);
 		}
 		else
-		{			
-			List<Set<Event>> eventGroups = this.groupEvents(dayEvents);
+		{
+			List<Event> dayEvents = this.timetable.startDuring(day, onUpdate);
 			
-			for (Set<Event> eventGroup : eventGroups)
+			if (timetable.getUpdatingDays().contains(day))
 			{
-				Event firstEvent = Collections.min(eventGroup);
-				double groupStart = this.day.startTime.timeTo(firstEvent.startTime).inHours();
+				this.addView(new LoadingView(context));
+			}
+			else
+			{
+				if (dayScrollView != null)
+					dayScrollView.unlink();
+				dayScrollView = new LinkedScrollView(context);
+				dayScrollView.linkTo(this.hourView.getScrollView());
+				this.addView(dayScrollView);
 				
-				LinearLayout horizontalEvents = new LinearLayout(context);
-			    horizontalEvents.setOrientation(Orientation.HORIZONTAL);
+				RelativeLayout layout = new RelativeLayout(context);
+				layout.setPadding(0, hourHeight / 2, 0, 0);
+				int numHours = this.getEndHour() - this.getStartHour() + 1;
+				layout.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, numHours * hourHeight));
+				dayScrollView.addView(layout);
 				
-				RelativeLayout.LayoutParams groupParams =
-						new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+				List<Set<Event>> eventGroups = this.groupEvents(dayEvents);
 				
-				groupParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
-				
-				double emptyTime = groupStart - this.getStartHour();
-				groupParams.topMargin = (int)(emptyTime * hourHeight);
-				
-				for (Event event : eventGroup)
+				for (Set<Event> eventGroup : eventGroups)
 				{
-					EventView ev = new EventView(context, event);
-					ev.setHourHeight(hourHeight);
-					horizontalEvents.addView(ev);
+					Event firstEvent = Collections.min(eventGroup);
+					double groupStart = this.day.startTime.timeTo(firstEvent.startTime).inHours();
+					
+					LinearLayout horizontalEvents = new LinearLayout(context);
+				    horizontalEvents.setOrientation(Orientation.HORIZONTAL);
+					
+					RelativeLayout.LayoutParams groupParams =
+							new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+					
+					groupParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+					
+					double emptyTime = groupStart - this.getStartHour();
+					groupParams.topMargin = (int)(emptyTime * hourHeight);
+					
+					for (Event event : eventGroup)
+					{
+						EventView ev = new EventView(context, event);
+						ev.setHourHeight(hourHeight);
+						
+						double eventStart = this.day.startTime.timeTo(event.startTime).inHours();
+						double emptyGroupTime = eventStart - groupStart;
+						
+						LayoutParams params = (LayoutParams)ev.getLayoutParams();
+						params.topMargin = (int)(emptyGroupTime * hourHeight);
+						ev.setLayoutParams(params);
+						
+						horizontalEvents.addView(ev);
+					}
+					
+					layout.addView(horizontalEvents, groupParams);
 				}
-				
-				layout.addView(horizontalEvents, groupParams);
 			}
 		}
 	}

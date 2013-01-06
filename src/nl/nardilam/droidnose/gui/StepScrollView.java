@@ -7,7 +7,7 @@ import android.widget.HorizontalScrollView;
 
 public abstract class StepScrollView extends HorizontalScrollView
 {
-	private static final double SCROLL_TOLERANCE = 0.1;
+	private static final double SCROLL_TOLERANCE = 0.15;
 	
 	private final StepScrollView stepScrollView = this;
 	

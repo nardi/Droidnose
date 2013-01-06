@@ -43,7 +43,7 @@ public class StudentTimetableLoader extends AsyncTask<Void, Void, StudentTimetab
         try
 		{
 			StudentTimetable timetable = StudentTimetable.loadFromFile(Integer.toString(this.studentId));
-			return timetable;				
+			return timetable;
 		}
 		/*
 		 * Als dat niet lukt moet het rooster
@@ -80,6 +80,9 @@ public class StudentTimetableLoader extends AsyncTask<Void, Void, StudentTimetab
     	}
     	else
     	{
+    		/*
+    		 * Wordt geen rekening gehouden met ignoreFile
+    		 */
 			this.getActivity().getNewStudentId(
 					"Er is een fout opgetreden bij het ophalen "
 				  + "van het rooster voor dit studentnummer:\n\n"

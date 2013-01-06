@@ -36,6 +36,12 @@ public class LinkedScrollView extends ScrollView
 		}
 	}
 	
+	public void unlink()
+	{
+		for (LinkedScrollView lsv : this.links)
+			this.unlink(lsv);
+	}
+	
 	public void unlink(LinkedScrollView lsv)
 	{
 		links.remove(lsv);

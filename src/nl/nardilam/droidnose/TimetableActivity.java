@@ -1,7 +1,5 @@
 package nl.nardilam.droidnose;
 
-import java.util.List;
-
 import nl.nardilam.droidnose.datetime.Day;
 import nl.nardilam.droidnose.datetime.TimeUtils;
 import nl.nardilam.droidnose.gui.LoadingView;
@@ -14,8 +12,9 @@ import android.content.SharedPreferences.Editor;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MenuItem.OnMenuItemClickListener;
+import android.view.View;
 
-public class TimetableActivity extends Activity
+public class TimetableActivity extends ContextActivity
 {
 	public static final String PREFERENCES_FILE = "DroidnoseSettings";
 	public static final String STUDENTID = "StudentId";
@@ -43,7 +42,6 @@ public class TimetableActivity extends Activity
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		Utils.setContext(this.getApplicationContext());
 		
 		this.tryRestoreState();
 		State currentState = this.currentState;
@@ -182,7 +180,7 @@ public class TimetableActivity extends Activity
 		super.onActivityResult(requestCode, resultCode, data);
 	}
 	
-	private MenuItem[] menuItems = new MenuItem[3];
+	private MenuItem[] menuItems = new MenuItem[2];
 	
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
@@ -219,7 +217,7 @@ public class TimetableActivity extends Activity
 		});
 		this.menuItems[1] = manualRefresh;
         
-        MenuItem feedback = menu.add("Feedback");
+        /* MenuItem feedback = menu.add("Feedback");
 		feedback.setOnMenuItemClickListener(new OnMenuItemClickListener()
 		{
 			public boolean onMenuItemClick(MenuItem item)
@@ -228,7 +226,7 @@ public class TimetableActivity extends Activity
                 return false;
 			}
 		});	
-		this.menuItems[2] = feedback;
+		this.menuItems[2] = feedback; */
 		
 		return true;
 	}
@@ -257,15 +255,21 @@ public class TimetableActivity extends Activity
 	    
 	    if (currentState.timetable != null)
 	    {
-	    	for (Callback<List<Event>> c : currentState.timetable.getUpdateHandlers())
+	    	for (Callback<Timetable.DayEvents> c : currentState.timetable.getUpdateHandlers())
 	    	{
 	    		if (c instanceof ContextCallback<?, ?>)
 	    		{
 	    			@SuppressWarnings("unchecked")
-					ContextCallback<List<Event>, Object> cc = (ContextCallback<List<Event>, Object>)c;
-	    			cc.setContext(null);
+					ContextCallback<Timetable.DayEvents, Object> cc = (ContextCallback<Timetable.DayEvents, Object>)c;
+	    			Object context = cc.getContext();
+	    			if (context instanceof View || context instanceof Activity)
+	    			{
+	    				cc.setContext(null);
+	    			}
 	    		}
 	    	}
+	    	
+	    	TimetableSaver.save(currentState.timetable);
 	    }
 	}
 }

@@ -27,6 +27,7 @@ public class MultiDayView extends TimeLayout
 	private List<DayView> dayViews = null;
 	
 	private int containerWidth;
+	private int containerHeight;
 	private int daysOnScreen;
 	private int dayWidth;
 	
@@ -81,9 +82,9 @@ public class MultiDayView extends TimeLayout
 		}
 	}
 	
-	private final Callback<List<Event>> onUpdate = new Callback<List<Event>>()
+	private final Callback<Timetable.DayEvents> onUpdate = new Callback<Timetable.DayEvents>()
 	{
-		public void onResult(List<Event> result)
+		public void onResult(Timetable.DayEvents result)
 		{
 			/*
 			 * Check if new days need to be added to the view
@@ -177,6 +178,10 @@ public class MultiDayView extends TimeLayout
 			return fromDay;
 		}
 		
+		/*
+		 * Modify to exclude empty weeks
+		 */
+		
 		List<Event> allEvents = this.timetable.getEvents();
 		if (!allEvents.isEmpty())
 		{
@@ -232,7 +237,9 @@ public class MultiDayView extends TimeLayout
 	{
 		DayView dayView = new DayView(this.getContext(), timetable, day, hourView);
 		dayView.setHourHeight(this.getHourHeight());
-		LayoutParams dayParams = new LayoutParams(this.dayWidth, LayoutParams.WRAP_CONTENT);
+		LayoutParams dayParams = new LayoutParams(dayView.getLayoutParams());
+		dayParams.width = this.dayWidth;
+		dayParams.height = this.containerHeight;
 		dayView.setLayoutParams(dayParams);
 		return dayView;
 	}
@@ -263,10 +270,12 @@ public class MultiDayView extends TimeLayout
 		protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec)
 		{
 			int parentWidth = MeasureSpec.getSize(widthMeasureSpec);
+			int parentHeight = MeasureSpec.getSize(heightMeasureSpec);
 			
 			if (!measured)
 			{
 				multiDayView.containerWidth = parentWidth;
+				multiDayView.containerHeight = parentHeight;
 				multiDayView.update();
 				
 				measured = true;

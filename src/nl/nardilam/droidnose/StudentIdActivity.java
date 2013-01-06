@@ -1,6 +1,7 @@
 package nl.nardilam.droidnose;
 
 import android.os.Bundle;
+import android.os.IBinder;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -9,12 +10,12 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.LinearLayout.LayoutParams;
 import android.text.InputType;
 
-public class StudentIdActivity extends Activity
+public class StudentIdActivity extends ContextActivity
 {
 	public static final String MESSAGE = "nl.nardilam.droidnose.Message";
 	public static final String DEFAULT_INPUT = "nl.nardilam.droidnose.DefaultInput";
@@ -24,35 +25,46 @@ public class StudentIdActivity extends Activity
 	
 	private final StudentIdActivity activity = this;
 	
-	private LinearLayout layout = null;
+	private RelativeLayout layout = null;
 	
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
     
-        this.layout = new LinearLayout(this);
-        this.layout.setOrientation(Orientation.VERTICAL);
+        this.layout = new RelativeLayout(this);
         this.setContentView(this.layout);
         
-        int padding = Utils.dpToPx(8);
+        int margin = Utils.dpToPx(0.02f * Utils.getDisplayMetrics().widthPixels);
         
         final TextView text = new TextView(this);
         text.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
         text.setText(this.getMessage());
         text.setTextSize(16);
         text.setGravity(Gravity.CENTER);
-        text.setPadding(padding, 2 * padding, padding, padding);
-        this.layout.addView(text);
+        //text.setPadding(padding, 2 * padding, padding, padding);
+        text.setId(1);
+        RelativeLayout.LayoutParams textParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        textParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+        textParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
+        textParams.setMargins(margin, margin, margin, margin);
+        this.layout.addView(text, textParams);
         
         final EditText input = new EditText(this);
         input.setInputType(InputType.TYPE_CLASS_PHONE);
         input.setText(this.getDefaultInput());
-        input.setPadding(padding, 0, padding, 0);
-        this.layout.addView(input);
+        //input.setPadding(padding, 0, padding, 0);
+        input.setId(2);
+        RelativeLayout.LayoutParams inputParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        inputParams.addRule(RelativeLayout.BELOW, text.getId());
+        inputParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
+        inputParams.setMargins(margin, 0, margin, 0);
+        this.layout.addView(input, inputParams);
         
         Button finished = new Button(this);
         finished.setText("Klaar!");
-        finished.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+        RelativeLayout.LayoutParams finishedParams = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        finishedParams.addRule(RelativeLayout.BELOW, input.getId());
+        finishedParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
         
         View.OnClickListener onFinished = new View.OnClickListener()
         {
@@ -63,13 +75,7 @@ public class StudentIdActivity extends Activity
 					String enteredText = input.getText().toString();
 					int studentId = Integer.parseInt(enteredText);
 					
-					/*
-					 * Dit verbergt het schermtoetsenbord, indien nodig.
-					 */
-					InputMethodManager manager =
-							(InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
-					manager.hideSoftInputFromWindow(input.getWindowToken(), 0);
-					
+					activity.hideOnScreenKeyboard(input.getWindowToken());
 					activity.setResult(Activity.RESULT_OK, createIntentFromStudentId(studentId));
 					activity.finish();
 				}
@@ -81,10 +87,16 @@ public class StudentIdActivity extends Activity
         };
         
         finished.setOnClickListener(onFinished);
-        this.layout.addView(finished);
+        this.layout.addView(finished, finishedParams);
     }
     
-    public static Intent createIntent(Context context, String message, String defaultInput)
+    private void hideOnScreenKeyboard(IBinder window)
+	{
+    	InputMethodManager manager = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+		manager.hideSoftInputFromWindow(window, 0);
+	}
+
+	public static Intent createIntent(Context context, String message, String defaultInput)
     {
     	Intent intent = new Intent(context, StudentIdActivity.class);
     	if (message != null)

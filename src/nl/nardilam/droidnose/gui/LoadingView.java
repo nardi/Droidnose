@@ -19,6 +19,8 @@ public class LoadingView extends RelativeLayout
 	{
 		super(context);
 		
+		this.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+		
 		LinearLayout layout = new LinearLayout(context);
 
         ProgressBar pBar = new ProgressBar(context);

@@ -61,6 +61,16 @@ public class Day extends TimePeriod
 		this(year, month, day, TimeUtils.getTimeZone(tz));
 	}
 	
+	public boolean equals(Object o)
+    {
+		return this.hashCode() == o.hashCode();
+    }
+    
+    public int hashCode()
+    {
+    	return Integer.parseInt("" + this.year + this.month + this.day);
+    }
+	
 	public Calendar toCalendar()
 	{
 		return calendar;

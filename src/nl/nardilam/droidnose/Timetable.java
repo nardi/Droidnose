@@ -1,5 +1,8 @@
 package nl.nardilam.droidnose;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -12,8 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import android.content.Context;
 import android.os.AsyncTask;
-
 import nl.nardilam.droidnose.datetime.Day;
 import nl.nardilam.droidnose.datetime.Duration;
 import nl.nardilam.droidnose.datetime.Time;
@@ -22,14 +25,28 @@ import nl.nardilam.droidnose.datetime.Week;
 import nl.nardilam.droidnose.datetime.WeekDay;
 
 public abstract class Timetable implements Serializable
-{    
+{
+	public class DayEvents
+	{
+		public final Day day;
+		public final List<Event> events;
+		
+		public DayEvents(Day day, List<Event> events)
+		{
+			this.day = day;
+			this.events = events;
+		}
+	}
+	
 	private static final long serialVersionUID = 1L;
+	
+	private static final Duration updateInterval = Duration.hours(24);
 	
 	private final Timetable timetable = this;
 	
 	private List<Event> eventList;
 	protected Map<Day, Time> updateLog;
-	private transient final Map<Day, Callback<List<Event>>> updatesInProgress = new HashMap<Day, Callback<List<Event>>>();
+	private transient Map<Day, List<Callback<DayEvents>>> updatesInProgress;
 	
     protected Timetable(List<Event> events)
     {    	
@@ -37,7 +54,7 @@ public abstract class Timetable implements Serializable
         this.updateLog = new HashMap<Day, Time>();
     }
     
-    public void updateIfNeeded(Callback<List<Event>> whenDone, Day... days)
+    public void updateIfNeeded(Callback<DayEvents> whenDone, Day... days)
     {
     	if (days.length != 0)
     	{
@@ -47,8 +64,7 @@ public abstract class Timetable implements Serializable
 	    	{
 	    		Time lastUpdate = this.updateLog.get(day);
 	        	if ((lastUpdate == null
-	        	|| !lastUpdate.add(Duration.hours(24)).isAfter(now))
-	        	&& !this.updatesInProgress.containsKey(day))
+	        	 || !lastUpdate.add(updateInterval).isAfter(now)))
 	        	{
 	        		daysToUpdate.add(day);
 	        	}
@@ -57,15 +73,31 @@ public abstract class Timetable implements Serializable
 	    }
     }
     
-    protected void update(final Callback<List<Event>> whenDone, final List<Day> daysToUpdate)
+    protected void update(final Callback<DayEvents> whenDone, final List<Day> daysToUpdate)
     {
+    	if (this.updatesInProgress == null)
+    		this.updatesInProgress = new HashMap<Day, List<Callback<DayEvents>>>();
+    	
+    	final Time updateTime = Time.now();
+   		Iterator<Day> dayIterator = daysToUpdate.iterator();
+   		while (dayIterator.hasNext())
+		{
+			Day day = dayIterator.next();
+			
+			if (this.updatesInProgress.containsKey(day))
+			{
+				dayIterator.remove();
+			}
+			else
+			{
+				this.updatesInProgress.put(day, new ArrayList<Callback<DayEvents>>());
+			}
+			
+			this.updatesInProgress.get(day).add(whenDone);
+    	}
+    	
     	if (!daysToUpdate.isEmpty())
     	{
-       		final Time updateTime = Time.now();
-       		for (Day day : daysToUpdate)
-       		{
-       			this.updatesInProgress.put(day, whenDone);
-       		}
     		new EventsDownloader(daysToUpdate, new Callback<List<Event>>()
     		{
 				public void onResult(List<Event> newEvents)
@@ -88,17 +120,36 @@ public abstract class Timetable implements Serializable
 				    	
 				    	for (Day day : daysToUpdate)
 				    	{
+				    		List<Callback<DayEvents>> callbacks = timetable.updatesInProgress.get(day);
 				    		timetable.updateLog.put(day, updateTime);
 				    		timetable.updatesInProgress.remove(day);
+				    		
+				    		List<Event> dayEvents = new ArrayList<Event>();
+				    		for (Event e : newEvents)
+				    		{
+				    			if (e.startsDuring(day))
+				    				dayEvents.add(e);
+				    		}
+				    		
+				    		for (Callback<DayEvents> callback : callbacks)
+				    			callback.onResult(new DayEvents(day, dayEvents));
 				    	}
+				    		
+				    	if (timetable.updatesInProgress.isEmpty())
+			    			TimetableSaver.save(timetable);
 					}
-			    	
-			    	whenDone.onResult(newEvents);
 				}
 
 				public void onError(Exception e)
 				{
-					whenDone.onError(e);
+					for (Day day : daysToUpdate)
+			    	{
+			    		List<Callback<DayEvents>> callbacks = timetable.updatesInProgress.get(day);
+			    		timetable.updatesInProgress.remove(day);
+			    		
+			    		for (Callback<DayEvents> callback : callbacks)
+			    			callback.onError(e);
+			    	}
 				}
     		}).execute();
     	}
@@ -269,9 +320,19 @@ public abstract class Timetable implements Serializable
     	return Collections.unmodifiableSet(this.updatesInProgress.keySet());
     }
     
-    public Collection<Callback<List<Event>>> getUpdateHandlers()
+    public Collection<Callback<DayEvents>> getUpdateHandlers()
     {
-    	return Collections.unmodifiableCollection(this.updatesInProgress.values());
+    	List<Callback<DayEvents>> total = new ArrayList<Callback<DayEvents>>();
+    	for (Day day : this.updatesInProgress.keySet())
+    	{
+    		total.addAll(this.updatesInProgress.get(day));
+    	}
+    	return total;
+    }
+    
+    public Collection<Callback<DayEvents>> getUpdateHandlers(Day day)
+    {
+    	return Collections.unmodifiableCollection(this.updatesInProgress.get(day));
     }
     
     protected void sort()
@@ -279,7 +340,7 @@ public abstract class Timetable implements Serializable
     	Collections.sort(this.eventList);
     }
     
-    public List<Event> startDuring(Day day, Callback<List<Event>> whenDone)
+    public List<Event> startDuring(Day day, Callback<DayEvents> whenDone)
     {
     	this.updateIfNeeded(whenDone, day);    	
     	return this.startDuring(day);
@@ -295,6 +356,20 @@ public abstract class Timetable implements Serializable
 		}
 		return events;
     }
+    
+    public void saveToFile() throws ContextNotSetException, IOException
+    {
+    	this.saveToFile(Integer.toString(this.hashCode()));
+    }
+    
+    public void saveToFile(String filename) throws ContextNotSetException, IOException
+	{
+    	Context context = Utils.getContext();
+    	FileOutputStream file = context.openFileOutput(filename, Context.MODE_PRIVATE);
+        ObjectOutputStream out = new ObjectOutputStream(file);
+        out.writeObject(this);
+        out.close();
+	}
     
     public String toString()
     {

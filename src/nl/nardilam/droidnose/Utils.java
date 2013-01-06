@@ -25,6 +25,16 @@ public class Utils
 			throw new ContextNotSetException();
 	}
 	
+	public static DisplayMetrics getDisplayMetrics()
+	{
+		return displayMetrics;
+	}
+	
+	public static float getScreenDensity()
+	{
+		return displayMetrics.density;
+	}
+	
 	public static int dpToPx(float dips)
 	{
 		return Math.max(Math.round(dips * displayMetrics.density), 1);
