@@ -297,11 +297,14 @@ public abstract class Timetable implements Serializable
     	Set<String> staffSet = new HashSet<String>();
 		staffSet.addAll(e1.staff);
 		staffSet.addAll(e2.staff);
+		String location = e1.location;
+		if (!e2.location.equals(Event.DEFAULT_LOCATION))
+			location += ", " + e2.location;
 		return new Event(e1.startTime,
 				e1.endTime,
 				e1.course,
 				e1.type,
-				e1.location + ", " + e2.location,
+				location,
 				staffSet);
     }
     

@@ -37,7 +37,8 @@ public class ChooseDateActivity extends ContextActivity
         linearLayout.setOrientation(Orientation.VERTICAL);
         
         final DatePicker datePicker = new DatePicker(this);	
-		
+		datePicker.setId(1);
+        
 		if (Build.VERSION.SDK_INT >= 11)
 		{
 			if (Utils.isInPortraitMode())
@@ -63,7 +64,14 @@ public class ChooseDateActivity extends ContextActivity
 	        datePicker.setScaleY(density);
 		}
         
-        Button finished = new Button(this);
+        Day selectedDay = createDayFromIntent(this.getIntent());
+        datePicker.init(selectedDay.year, selectedDay.month - 1, selectedDay.day, null);
+        
+        RelativeLayout.LayoutParams dateParams =
+				new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+		dateParams.addRule(RelativeLayout.CENTER_IN_PARENT);
+        
+		Button finished = new Button(this);
         finished.setText("Klaar!");
         View.OnClickListener onFinished = new View.OnClickListener()
         {
@@ -78,20 +86,14 @@ public class ChooseDateActivity extends ContextActivity
 			}
         };
         finished.setOnClickListener(onFinished);
-        finished.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
-        finished.setGravity(Gravity.CENTER);
         
-        Day selectedDay = createDayFromIntent(this.getIntent());
-        datePicker.init(selectedDay.year, selectedDay.month - 1, selectedDay.day, null);
-        
-        linearLayout.addView(datePicker, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
-        linearLayout.addView(finished);
-        
-        RelativeLayout.LayoutParams layoutParams =
-				new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-		layoutParams.addRule(RelativeLayout.CENTER_IN_PARENT);
-        
-		layout.addView(linearLayout, layoutParams);
+        RelativeLayout.LayoutParams finishedParams =
+				new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+		finishedParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
+		finishedParams.addRule(RelativeLayout.BELOW, datePicker.getId());
+		
+		layout.addView(datePicker, dateParams);
+		layout.addView(finished, finishedParams);
 		
         this.setContentView(layout);
     }

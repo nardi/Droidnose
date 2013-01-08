@@ -78,10 +78,10 @@ public class DayView extends TimeLayout
 		{
 			TextView errorText = new TextView(context);
 			errorText.setText("Er is een fout opgetreden:\n\n"
-					  		+ this.errorUpdating + "\n\n"
+					  		+ Utils.niceException(this.errorUpdating) + "\n\n"
 					  		+ "Raak deze tekst aan om het opnieuw te proberen.");
 			errorText.setGravity(Gravity.CENTER);
-			errorText.setEllipsize(TruncateAt.MIDDLE);
+			//errorText.setEllipsize(TruncateAt.MIDDLE);
 			errorText.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 			final int padding = Utils.dpToPx(40);
 			errorText.setPadding(padding, 0, padding, 0);

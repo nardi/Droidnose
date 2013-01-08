@@ -49,4 +49,21 @@ public class Utils
 	{
 		return displayMetrics.heightPixels > displayMetrics.widthPixels;
 	}
+	
+	public static String niceException(Throwable t)
+	{
+		while (t.getCause() != null)
+		{
+			t = t.getCause();
+		}
+		StackTraceElement[] st = t.getStackTrace();
+		for (int i = 0; i < st.length; i++)
+		{
+			if (st[i].getClassName().startsWith("nl.nardilam.droidnose"))
+			{
+				return t.getClass().getName() + " in " + st[i].toString();
+			}
+		}
+		return t.getClass().getName() + " in " + st[0].toString();
+	}
 }

@@ -141,12 +141,12 @@ public class StudentTimetable extends Timetable
     	return new StudentTimetable(student, new ArrayList<Event>());
     }
     
-    private static final String emptyGroupFilter = "Groups eq ''";
+    private static final String emptyGroupFilter = "";
     private static final String groupFormat =
 		"Groups eq '%1$s'"
 	  + " or substringof('%1$s,', Groups) eq true"
 	  + " or substringof(',%1$s', Groups) eq true"
-	  + " or " + emptyGroupFilter;
+	  + " or Groups eq ''";
     
     protected List<Event> downloadEvents(String dateFilter) throws IOException, JSONException
     {
@@ -163,13 +163,11 @@ public class StudentTimetable extends Timetable
 	    		String groupFilter = String.format(groupFormat, groupId);
 	    		queryUrl += "(" + groupFilter + ")";
     		}
-    		else
-    		{
-    			queryUrl += "(" + emptyGroupFilter + ")";
-    		}
     		if (hasFilter)
     		{
-				queryUrl += " and (" + dateFilter + ")";
+    			if (inGroup)
+    				queryUrl += " and ";
+				queryUrl += "(" + dateFilter + ")";
     		}
     		queryUrl = queryUrl.replaceAll(" ", "%20");
     		DatanoseQuery activitiesByCourse = new DatanoseQuery(queryUrl);
