@@ -132,6 +132,7 @@ public class DayView extends TimeLayout
 		layout.setLayoutParams(new LayoutParams(0, LayoutParams.WRAP_CONTENT, 0.5f));
 		
 		List<SortedSet<Event>> horizontalEventGroups = this.groupHorizontalEvents(events);
+		SortedSet<Event> lastHEG = null;
 		
 		for (SortedSet<Event> horizontalEventGroup : horizontalEventGroups)
 		{
@@ -160,6 +161,13 @@ public class DayView extends TimeLayout
 				{
 					EventView ev = new EventView(context, event);
 					ev.setHourHeight(hourHeight);
+					if (lastHEG != null)
+					{
+						boolean topBorder = true;
+						for (Event e : lastHEG)
+							topBorder = !event.startTime.equals(e.endTime);
+						ev.setBorder(true, topBorder, true, true);
+					}
 					
 					LayoutParams params = (LayoutParams)ev.getLayoutParams();
 					params.topMargin = (int)(emptyGroupTime * hourHeight);
@@ -176,6 +184,8 @@ public class DayView extends TimeLayout
 			}
 			
 			layout.addView(horizontalEvents, groupParams);
+			
+			lastHEG = horizontalEventGroup;
 		}
 		
 		return layout;

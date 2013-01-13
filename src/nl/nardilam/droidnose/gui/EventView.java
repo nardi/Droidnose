@@ -10,10 +10,14 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 public class EventView extends TimeLayout
-{
+{	
 	public final Event event;
 	
 	private RelativeLayout layout = null;
+	private boolean leftBorder = true,
+					topBorder = true,
+					bottomBorder = true,
+					rightBorder = true;
 	
 	public EventView(Context context, Event event)
 	{
@@ -72,10 +76,14 @@ public class EventView extends TimeLayout
 	
 	private void addBorder(int thickness)
 	{
-		this.addDivider(thickness, Orientation.HORIZONTAL, RelativeLayout.ALIGN_PARENT_LEFT);
-		this.addDivider(thickness, Orientation.VERTICAL, RelativeLayout.ALIGN_PARENT_TOP);
-		this.addDivider(thickness, Orientation.VERTICAL, RelativeLayout.ALIGN_PARENT_BOTTOM);
-		this.addDivider(thickness, Orientation.HORIZONTAL, RelativeLayout.ALIGN_PARENT_RIGHT);
+		if (leftBorder)
+			this.addDivider(thickness, Orientation.HORIZONTAL, RelativeLayout.ALIGN_PARENT_LEFT);
+		if (topBorder)
+			this.addDivider(thickness, Orientation.VERTICAL, RelativeLayout.ALIGN_PARENT_TOP);
+		if (bottomBorder)
+			this.addDivider(thickness, Orientation.VERTICAL, RelativeLayout.ALIGN_PARENT_BOTTOM);
+		if (rightBorder)
+			this.addDivider(thickness, Orientation.HORIZONTAL, RelativeLayout.ALIGN_PARENT_RIGHT);
 	}
 	
 	private void addDivider(int thickness, int orientation, int alignment)
@@ -90,5 +98,14 @@ public class EventView extends TimeLayout
 			params.leftMargin = params.rightMargin = thickness;
 		
 		this.layout.addView(divider, params);
+	}
+	
+	public void setBorder(boolean l, boolean t, boolean b, boolean r)
+	{
+		leftBorder = l;
+		topBorder = t;
+		bottomBorder = b;
+		rightBorder = r;
+		this.update();
 	}
 }

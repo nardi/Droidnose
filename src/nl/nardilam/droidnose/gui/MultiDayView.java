@@ -53,6 +53,11 @@ public class MultiDayView extends TimeLayout
 		this.dayList = new ArrayList<Day>();
 		this.dayViews = new ArrayList<DayView>();
 		
+		this.checkHourRange();
+	}
+	
+	private void checkHourRange()
+	{
 		/*
 		 * Als er dingen voor negenen of na vijfen gebeuren,
 		 * moet de HourView hiervan op de hoogte zijn om zich uit te breiden
@@ -70,6 +75,8 @@ public class MultiDayView extends TimeLayout
 			endHour = (int)Math.max(endHour, Math.round(endTime));
 		}
 		hourView.setHourRange(startHour, endHour);
+		for (DayView dv : this.dayViews)
+			dv.setHourRange(startHour, endHour);
 	}
 	
 	private void setStartDay(Day day)
@@ -90,7 +97,7 @@ public class MultiDayView extends TimeLayout
 			 * Check if new days need to be added to the view
 			 * or hourRanges need to be changed
 			 */
-			//multiDayView.update();
+			checkHourRange();
 		}
 
 		public void onError(Exception e)
@@ -132,7 +139,7 @@ public class MultiDayView extends TimeLayout
 	{
 		if (this.dayList.isEmpty())
 		{
-			this.startDay = this.getFirstNonEmptyDay(this.startDay, 1);
+			this.startDay = this.getFirstValidDay(this.startDay, 1);
 			this.addDay(this.startDay);
 		}
 		
@@ -157,67 +164,30 @@ public class MultiDayView extends TimeLayout
 		for (int i = 0; i < amount; i++)
 		{
 			currentDay = currentDay.add(searchDirection);
-			currentDay = this.getFirstNonEmptyDay(currentDay, searchDirection);
+			currentDay = this.getFirstValidDay(currentDay, searchDirection);
 			days.add(currentDay);
 		}
 		return days;
 	}
 		
-	private Day getFirstNonEmptyDay(Day fromDay, int searchDirection)
+	private Day getFirstValidDay(Day fromDay, int searchDirection)
 	{
+		Day day = fromDay;
 		if (fromDay.getWeekDay() == WeekDay.Saturday)
 		{
-			return searchDirection == 1 ? fromDay.add(2) : fromDay.add(-1);
+			day = searchDirection == 1 ? fromDay.add(2) : fromDay.add(-1);
 		}
 		else if (fromDay.getWeekDay() == WeekDay.Sunday)
 		{
-			return searchDirection == 1 ? fromDay.add(1) : fromDay.add(-2);
+			day = searchDirection == 1 ? fromDay.add(1) : fromDay.add(-2);
 		}
-		else if (true)
-		{
-			return fromDay;
-		}
+		
+		this.timetable.updateIfNeeded(onUpdate, day);
+		return day;
 		
 		/*
 		 * Modify to exclude empty weeks
 		 */
-		
-		List<Event> allEvents = this.timetable.getEvents();
-		if (!allEvents.isEmpty())
-		{
-			Event firstEvent = allEvents.get(0);
-			Event lastEvent = allEvents.get(allEvents.size() - 1);
-			
-			/*
-			 * Als de dag buiten het rooster ligt, return hem om
-			 * geen oneindige loop te krijgen (en toch wat te laten zien)
-			 */
-			if (fromDay.startTime.isAfter(lastEvent.startTime)
-			 || fromDay.endTime.isBefore(firstEvent.startTime))
-			{
-				return fromDay;
-			}
-			
-			/*
-			 * Blijf anders 1 bij de dag optellen totdat er iets plaatsvindt
-			 */
-			Day currentDay = fromDay;
-			List<Event> dayEvents = timetable.startDuring(currentDay, onUpdate);
-			while (dayEvents.isEmpty())
-			{
-				currentDay = currentDay.add(searchDirection);
-				dayEvents = timetable.startDuring(currentDay, onUpdate);
-			}
-			return currentDay;
-		}
-		/*
-		 * Als er een leeg rooster gegeven wordt, geven
-		 * we de opgegeven dag maar terug
-		 */
-		else
-		{
-			return fromDay;
-		}
 	}
 	
 	private void addDay(Day day)
