@@ -3,9 +3,9 @@ package nl.nardilam.droidnose.gui;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import nl.nardilam.droidnose.ContextCallback;
 import nl.nardilam.droidnose.Event;
@@ -80,14 +80,12 @@ public class DayView extends TimeLayout
 					  		+ Utils.niceException(this.errorUpdating) + "\n\n"
 					  		+ "Raak deze tekst aan om het opnieuw te proberen.");
 			errorText.setGravity(Gravity.CENTER);
-			//errorText.setEllipsize(TruncateAt.MIDDLE);
 			errorText.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 			final int padding = Utils.dpToPx(40);
 			errorText.setPadding(padding, 0, padding, 0);
 			errorText.setClickable(true);
 			errorText.setOnClickListener(new View.OnClickListener()
 			{
-				@Override
 				public void onClick(View v)
 				{
 					errorUpdating = null;
@@ -113,49 +111,74 @@ public class DayView extends TimeLayout
 				dayScrollView.linkTo(this.hourView.getScrollView());
 				this.addView(dayScrollView);
 				
-				RelativeLayout layout = new RelativeLayout(context);
+				RelativeLayout layout = this.makeLayout(dayEvents, this.getStartHour());
 				layout.setPadding(0, hourHeight / 2, 0, 0);
 				int numHours = this.getEndHour() - this.getStartHour() + 1;
-				layout.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, numHours * hourHeight));
+				LayoutParams params = (LayoutParams)layout.getLayoutParams();
+				params.width = LayoutParams.MATCH_PARENT;
+				params.height = numHours * hourHeight;
+				layout.setLayoutParams(params);
 				dayScrollView.addView(layout);
-				
-				List<Set<Event>> eventGroups = this.groupEvents(dayEvents);
-				
-				for (Set<Event> eventGroup : eventGroups)
-				{
-					Event firstEvent = Collections.min(eventGroup);
-					double groupStart = this.day.startTime.timeTo(firstEvent.startTime).inHours();
-					
-					LinearLayout horizontalEvents = new LinearLayout(context);
-				    horizontalEvents.setOrientation(Orientation.HORIZONTAL);
-					
-					RelativeLayout.LayoutParams groupParams =
-							new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-					
-					groupParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
-					
-					double emptyTime = groupStart - this.getStartHour();
-					groupParams.topMargin = (int)(emptyTime * hourHeight);
-					
-					for (Event event : eventGroup)
-					{
-						EventView ev = new EventView(context, event);
-						ev.setHourHeight(hourHeight);
-						
-						double eventStart = this.day.startTime.timeTo(event.startTime).inHours();
-						double emptyGroupTime = eventStart - groupStart;
-						
-						LayoutParams params = (LayoutParams)ev.getLayoutParams();
-						params.topMargin = (int)(emptyGroupTime * hourHeight);
-						ev.setLayoutParams(params);
-						
-						horizontalEvents.addView(ev);
-					}
-					
-					layout.addView(horizontalEvents, groupParams);
-				}
 			}
 		}
+	}
+	
+	private RelativeLayout makeLayout(Collection<Event> events, double startHour)
+	{
+		Context context = this.getContext();
+		int hourHeight = this.getHourHeight();
+		
+		RelativeLayout layout = new RelativeLayout(context);
+		layout.setLayoutParams(new LayoutParams(0, LayoutParams.WRAP_CONTENT, 0.5f));
+		
+		List<SortedSet<Event>> horizontalEventGroups = this.groupHorizontalEvents(events);
+		
+		for (SortedSet<Event> horizontalEventGroup : horizontalEventGroups)
+		{
+			Event firstEvent = Collections.min(horizontalEventGroup);
+			double groupStart = this.day.startTime.timeTo(firstEvent.startTime).inHours();
+			
+			LinearLayout horizontalEvents = new LinearLayout(context);
+		    horizontalEvents.setOrientation(Orientation.HORIZONTAL);
+			
+			RelativeLayout.LayoutParams groupParams =
+					new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+			
+			groupParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+			
+			double emptyTime = groupStart - startHour;
+			groupParams.topMargin = (int)(emptyTime * hourHeight);
+			
+			List<SortedSet<Event>> verticalEventGroups = this.groupVerticalEvents(horizontalEventGroup);
+			
+			for (SortedSet<Event> verticalEventGroup : verticalEventGroups)
+			{
+				Event event = verticalEventGroup.first();
+				double eventStart = this.day.startTime.timeTo(event.startTime).inHours();
+				double emptyGroupTime = eventStart - groupStart;
+				if (verticalEventGroup.size() == 1)
+				{
+					EventView ev = new EventView(context, event);
+					ev.setHourHeight(hourHeight);
+					
+					LayoutParams params = (LayoutParams)ev.getLayoutParams();
+					params.topMargin = (int)(emptyGroupTime * hourHeight);
+					ev.setLayoutParams(params);
+					
+					horizontalEvents.addView(ev);
+				}
+				else
+				{
+					RelativeLayout groupLayout = this.makeLayout(verticalEventGroup, eventStart);
+					groupLayout.setPadding(0, (int)emptyGroupTime, 0, 0);
+					horizontalEvents.addView(groupLayout);
+				}
+			}
+			
+			layout.addView(horizontalEvents, groupParams);
+		}
+		
+		return layout;
 	}
 	
 	/*
@@ -163,15 +186,15 @@ public class DayView extends TimeLayout
 	 * Deze moeten daarom naast elkaar verschijnen en dus in een
 	 * horizontale LinearLayout geplaatst worden, vandaar deze groepering. 
 	 */
-	private List<Set<Event>> groupEvents(Collection<Event> events)
+	private List<SortedSet<Event>> groupHorizontalEvents(Collection<Event> events)
 	{
 		List<Event> eventsToCheck = new ArrayList<Event>(events);
-		List<Set<Event>> eventGroupsList = new ArrayList<Set<Event>>();
+		List<SortedSet<Event>> eventGroupsList = new ArrayList<SortedSet<Event>>();
 		
 		while (!eventsToCheck.isEmpty())
 		{
 			Event firstEvent = eventsToCheck.get(0);
-			Set<Event> eventGroup = new HashSet<Event>();
+			SortedSet<Event> eventGroup = new TreeSet<Event>();
 			eventGroup.add(firstEvent);
 			
 			for (Event candidate : eventsToCheck)
@@ -183,6 +206,34 @@ public class DayView extends TimeLayout
 						eventGroup.add(candidate);
 						break;
 					}	
+				}
+			}
+			
+			eventsToCheck.removeAll(eventGroup);
+			eventGroupsList.add(eventGroup);
+		}
+		
+		return eventGroupsList;
+	}
+	
+	private List<SortedSet<Event>> groupVerticalEvents(Collection<Event> events)
+	{
+		List<Event> eventsToCheck = new ArrayList<Event>(events);
+		List<SortedSet<Event>> eventGroupsList = new ArrayList<SortedSet<Event>>();
+		
+		while (!eventsToCheck.isEmpty())
+		{
+			Event firstEvent = eventsToCheck.get(0);
+			SortedSet<Event> eventGroup = new TreeSet<Event>();
+			eventGroup.add(firstEvent);
+			
+			Event currentEvent = firstEvent;
+			for (Event candidate : eventsToCheck)
+			{
+				if (!candidate.startTime.isBefore(currentEvent.endTime))
+				{
+					eventGroup.add(candidate);
+					currentEvent = candidate;
 				}
 			}
 			
