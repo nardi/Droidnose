@@ -14,7 +14,6 @@ import nl.nardilam.droidnose.Timetable;
 import nl.nardilam.droidnose.Utils;
 import nl.nardilam.droidnose.datetime.Day;
 import android.content.Context;
-import android.text.TextUtils.TruncateAt;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.LinearLayout;

@@ -4,7 +4,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import android.content.Context;
@@ -141,7 +140,6 @@ public class StudentTimetable extends Timetable
     	return new StudentTimetable(student, new ArrayList<Event>());
     }
     
-    private static final String emptyGroupFilter = "";
     private static final String groupFormat =
 		"Groups eq '%1$s'"
 	  + " or substringof('%1$s,', Groups) eq true"
@@ -180,22 +178,14 @@ public class StudentTimetable extends Timetable
 				/*
 				 * Locaties ophalen kost erg veel requests en tijd, kan
 				 * waarschijnlijk sneller als batchrequest gedaan worden
-				 * Ook moet dit een lijst worden
 				 */
-				String location = Event.DEFAULT_LOCATION;
 				DatanoseQuery locationsByActivity = new DatanoseQuery("GetLocationsByActivity?id="
 						+ (int)activity.get("ID").asNumber());
 				List<JSONValue> locations = locationsByActivity.query();
-				if (!locations.isEmpty())
+				List<String> locationNames = new ArrayList<String>();
+				for (JSONValue location : locations)
 				{
-					location = "";
-					Iterator<JSONValue> locationIterator = locations.iterator();
-					while (locationIterator.hasNext())
-					{
-						location += locationIterator.next().asObject().get("Name").asString();
-						if (locationIterator.hasNext())
-							location += ", ";
-					}
+					locationNames.add(location.asObject().get("Name").asString());
 				}
     			
 				EventType type = EventType.parse(activity.get("ActivityType").asString());
@@ -217,7 +207,7 @@ public class StudentTimetable extends Timetable
 						Double duration = activity.get("Duration").asNumber();
 						Time end = start.add(Duration.hours(duration));
 						
-						events.add(new Event(start, end, course, type, location, new ArrayList<String>()));
+						events.add(new Event(start, end, course, type, locationNames, new ArrayList<String>()));
 					}
 				}
     		}

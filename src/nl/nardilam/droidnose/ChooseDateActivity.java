@@ -9,7 +9,6 @@ import android.os.Bundle;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
-import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
@@ -59,9 +58,9 @@ public class ChooseDateActivity extends ContextActivity
 				datePicker.setSpinnersShown(true);
 			}
 			
-			float density = Utils.getScreenDensity();
-			datePicker.setScaleX(density);
-	        datePicker.setScaleY(density);
+			//float density = Utils.getScreenDensity();
+			//datePicker.setScaleX(density);
+	        //datePicker.setScaleY(density);
 		}
         
         Day selectedDay = createDayFromIntent(this.getIntent());

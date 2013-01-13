@@ -10,20 +10,18 @@ public class Event extends TimePeriod
 {    
 	private static final long serialVersionUID = 1L;
 	
-	public static final String DEFAULT_LOCATION = "nog onbekende locatie";
-	
 	public final Course course;
 	public final EventType type;
-	public final String location;
+	public final LocationSet location;
 	public final Collection<String> staff;
     
-    public Event(Time start, Time end, Course course, EventType type, String location, Collection<String> staff)
+    public Event(Time start, Time end, Course course, EventType type, Collection<String> locations, Collection<String> staff)
     {
         super(start, end);
         
         this.course = course;
         this.type = type;
-        this.location = location;
+        this.location = new LocationSet(locations);
         this.staff = Collections.unmodifiableCollection(staff);
     }
     

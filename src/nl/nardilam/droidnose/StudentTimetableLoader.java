@@ -1,6 +1,5 @@
 package nl.nardilam.droidnose;
 
-import java.io.FileInputStream;
 import android.content.Context;
 import android.os.AsyncTask;
 

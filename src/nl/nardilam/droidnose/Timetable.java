@@ -52,7 +52,14 @@ public abstract class Timetable implements Serializable
     {    	
     	this.setEvents(new ArrayList<Event>(events));
         this.updateLog = new HashMap<Day, Time>();
+        this.updatesInProgress = new HashMap<Day, List<Callback<DayEvents>>>();
     }
+    
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException
+    {
+	    in.defaultReadObject();
+	    this.updatesInProgress = new HashMap<Day, List<Callback<DayEvents>>>();
+	}
     
     public void updateIfNeeded(Callback<DayEvents> whenDone, Day... days)
     {
@@ -74,10 +81,7 @@ public abstract class Timetable implements Serializable
     }
     
     protected void update(final Callback<DayEvents> whenDone, final List<Day> daysToUpdate)
-    {
-    	if (this.updatesInProgress == null)
-    		this.updatesInProgress = new HashMap<Day, List<Callback<DayEvents>>>();
-    	
+    {    	
     	final Time updateTime = Time.now();
    		Iterator<Day> dayIterator = daysToUpdate.iterator();
    		while (dayIterator.hasNext())
@@ -297,14 +301,13 @@ public abstract class Timetable implements Serializable
     	Set<String> staffSet = new HashSet<String>();
 		staffSet.addAll(e1.staff);
 		staffSet.addAll(e2.staff);
-		String location = e1.location;
-		if (!e2.location.equals(Event.DEFAULT_LOCATION))
-			location += ", " + e2.location;
+		List<String> locations = new ArrayList<String>(e1.location.set);
+		locations.addAll(e2.location.set);
 		return new Event(e1.startTime,
 				e1.endTime,
 				e1.course,
 				e1.type,
-				location,
+				locations,
 				staffSet);
     }
     

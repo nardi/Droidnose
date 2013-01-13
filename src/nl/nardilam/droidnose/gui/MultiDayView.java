@@ -121,7 +121,7 @@ public class MultiDayView extends TimeLayout
 			{
 				public void run()
 				{
-					multiDayView.scrollView.scrollToStep(startDayIndex);
+					multiDayView.scrollView.goToStep(startDayIndex);
 					multiDayView.scrollView.setVisibility(VISIBLE);
 				}
 			});
@@ -230,7 +230,20 @@ public class MultiDayView extends TimeLayout
 		this.dayList.add(location, day);
 		DayView dayView = this.makeDayView(day);
 		this.dayViews.add(location, dayView);
-		this.layout.addView(dayView, location);		
+		this.layout.addView(dayView, location);
+		
+		/*
+		final int currentStep = this.scrollView.getCurrentStep();
+		this.post(new Runnable()
+		{
+			public void run()
+			{					
+				multiDayView.layout.addView(dayView, location);
+				//if (location <= currentStep && multiDayView.layout.getChildCount() <= 3)
+					//multiDayView.scrollView.goToStep(currentStep + 1);
+			}
+		});
+		*/
 	}
 	
 	private DayView makeDayView(Day day)
@@ -284,15 +297,20 @@ public class MultiDayView extends TimeLayout
 			super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 		}
 
-		protected void onStepChange(int step)
+		protected void onStepChange(final int step)
 		{
 			multiDayView.setStartDay(multiDayView.dayList.get(step));
-			int dayOffset = multiDayView.fillDays();
-			
-			int rightDayViewIndex = dayOffset + step + multiDayView.daysOnScreen - 1;
-			multiDayView.setScrollBars(rightDayViewIndex);
-			
-			this.scrollToStep(step + dayOffset);
+			multiDayView.post(new Runnable()
+			{
+				public void run()
+				{
+					int dayOffset = multiDayView.fillDays();
+					goToStep(step + dayOffset);
+					
+					int rightDayViewIndex = dayOffset + step + multiDayView.daysOnScreen - 1;
+					multiDayView.setScrollBars(rightDayViewIndex);
+				}
+			});
 		}
 	}
 }
