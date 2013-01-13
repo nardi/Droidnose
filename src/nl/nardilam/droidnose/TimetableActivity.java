@@ -180,10 +180,21 @@ public class TimetableActivity extends ContextActivity
 		super.onActivityResult(requestCode, resultCode, data);
 	}
 	
-	private MenuItem[] menuItems = new MenuItem[2];
+	private MenuItem[] menuItems = new MenuItem[3];
 	
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
+		MenuItem toToday = menu.add("Naar vandaag");
+		toToday.setOnMenuItemClickListener(new OnMenuItemClickListener()
+		{
+			public boolean onMenuItemClick(MenuItem item)
+			{
+				activity.showTimetableView(Day.today(TimeUtils.CET));
+				return true;
+			}
+		});
+		this.menuItems[0] = toToday;
+		
 		MenuItem newStudentId = menu.add("Verander studentnummer");
 		newStudentId.setOnMenuItemClickListener(new OnMenuItemClickListener()
 		{
@@ -197,7 +208,7 @@ public class TimetableActivity extends ContextActivity
 				return true;
 			}
 		});
-		this.menuItems[0] = newStudentId;
+		this.menuItems[1] = newStudentId;
 		
 		MenuItem manualRefresh = menu.add("Handmatig verversen");
 		manualRefresh.setOnMenuItemClickListener(new OnMenuItemClickListener()
@@ -215,18 +226,7 @@ public class TimetableActivity extends ContextActivity
 		    		return false;
 			}
 		});
-		this.menuItems[1] = manualRefresh;
-        
-        /* MenuItem feedback = menu.add("Feedback");
-		feedback.setOnMenuItemClickListener(new OnMenuItemClickListener()
-		{
-			public boolean onMenuItemClick(MenuItem item)
-			{
-                // launch feedbackactivity
-                return false;
-			}
-		});	
-		this.menuItems[2] = feedback; */
+		this.menuItems[2] = manualRefresh;
 		
 		return true;
 	}
@@ -255,6 +255,9 @@ public class TimetableActivity extends ContextActivity
 	    
 	    if (currentState.timetable != null)
 	    {
+	    	/*
+	    	 * Lelijke manier om oude Views te ontkoppelen
+	    	 */
 	    	for (Callback<Timetable.DayEvents> c : currentState.timetable.getUpdateHandlers())
 	    	{
 	    		if (c instanceof ContextCallback<?, ?>)

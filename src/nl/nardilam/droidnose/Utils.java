@@ -66,4 +66,29 @@ public class Utils
 		}
 		return t.getClass().getName() + " in " + st[0].toString();
 	}
+	
+	public static String unescape(String s)
+	{    
+	    int length = s.length();
+	    StringBuffer sb = new StringBuffer(length);
+	    
+	    int i = 0;
+		char c;
+	    while (i < length)
+	    {
+	        c = s.charAt(i);
+	        if (i + 1 < length && s.substring(i, i + 2).equals("\\u"))
+	        {
+	        	i += 2;
+                c = (char)Integer.parseInt(s.substring(i, i + 4), 16);
+                i += 4;
+	        }
+	        else
+	        {
+	        	i++;
+	        }
+	        sb.append(c);
+	    }
+	    return sb.toString();
+	}
 }

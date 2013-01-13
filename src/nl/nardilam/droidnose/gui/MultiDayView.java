@@ -270,17 +270,13 @@ public class MultiDayView extends TimeLayout
 		protected void onStepChange(final int step)
 		{
 			multiDayView.setStartDay(multiDayView.dayList.get(step));
-			multiDayView.post(new Runnable()
-			{
-				public void run()
-				{
-					int dayOffset = multiDayView.fillDays();
-					goToStep(step + dayOffset);
-					
-					int rightDayViewIndex = dayOffset + step + multiDayView.daysOnScreen - 1;
-					multiDayView.setScrollBars(rightDayViewIndex);
-				}
-			});
+			final int dayOffset = multiDayView.fillDays();
+			this.scrollBy(dayOffset * this.stepSize, 0);
+			
+			int rightDayViewIndex = dayOffset + step + multiDayView.daysOnScreen - 1;
+			multiDayView.setScrollBars(rightDayViewIndex);
+			
+			this.goToStep(step + dayOffset);
 		}
 	}
 }

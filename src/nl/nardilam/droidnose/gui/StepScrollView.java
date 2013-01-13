@@ -1,6 +1,5 @@
 package nl.nardilam.droidnose.gui;
 
-import nl.nardilam.droidnose.Callback;
 import android.content.Context;
 import android.view.MotionEvent;
 import android.view.View;
@@ -12,8 +11,8 @@ public abstract class StepScrollView extends HorizontalScrollView
 	
 	private final StepScrollView stepScrollView = this;
 	
-	private int stepSize;
-	private int currentStep;
+	protected int stepSize;
+	protected int currentStep;
 	
 	public StepScrollView(Context context)
 	{
@@ -32,23 +31,11 @@ public abstract class StepScrollView extends HorizontalScrollView
 					double distanceFromCurrentStep = stepPosition - stepScrollView.currentStep;
 					int stepDiff = (int)(Math.signum(distanceFromCurrentStep) *
 							Math.ceil(Math.abs(distanceFromCurrentStep)));
-					final boolean stepChange = Math.abs(distanceFromCurrentStep) > SCROLL_TOLERANCE;
 					
-					if (stepChange)
+					if (Math.abs(distanceFromCurrentStep) > SCROLL_TOLERANCE)
 						stepScrollView.currentStep += stepDiff;
-
-					stepScrollView.smoothScrollTo(stepScrollView.currentStep * stepSize, new Callback<Integer>()
-					{
-						public void onResult(Integer result)
-						{
-							if (stepChange)
-								stepScrollView.onStepChange(stepScrollView.currentStep);
-						}
-						public void onError(Exception e)
-						{
-							// Too bad
-						}
-					});
+					
+					stepScrollView.onStepChange(stepScrollView.currentStep);
 					
 					return true;
 				}
@@ -69,28 +56,15 @@ public abstract class StepScrollView extends HorizontalScrollView
 	
 	public void goToStep(int step)
 	{
-		this.scrollTo(step * this.stepSize, 0);
 		this.currentStep = step;
+		this.post(new Runnable()
+		{
+			public void run()
+			{
+				stepScrollView.smoothScrollTo(currentStep * stepSize, 0);
+			}
+		});
 	}
 	
 	protected abstract void onStepChange(int step);
-	
-	int scrollDestination = -1;
-	Callback<Integer> scrollCallback = null;
-	
-	public void smoothScrollTo(int x, Callback<Integer> callback)
-	{ 
-		this.scrollDestination = x;
-		this.scrollCallback = callback;
-		this.smoothScrollTo(x, 0);
-	}
-	
-	protected void onScrollChanged(int x, int y, int oldx, int oldy)
-	{
-		if (this.scrollCallback != null && x == this.scrollDestination)
-		{
-			this.scrollCallback.onResult(x);
-			this.scrollDestination = -1;
-		}
-	}
 }

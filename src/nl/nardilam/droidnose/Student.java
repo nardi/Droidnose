@@ -41,7 +41,7 @@ public class Student implements Serializable
 			
 			int id = (int)course.get("ID").asNumber();
 			String catalogNumber = course.get("CatalogNumber").asString();
-			String name = course.get("Name").asString();
+			String name = Utils.unescape(course.get("Name").asString());
 			int academicYear = (int)course.get("AcademicYear").asNumber();
 			
 			courses.add(new Course(id, catalogNumber, name, academicYear));

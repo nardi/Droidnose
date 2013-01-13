@@ -41,7 +41,6 @@ public class StudentIdActivity extends ContextActivity
         text.setText(this.getMessage());
         text.setTextSize(16);
         text.setGravity(Gravity.CENTER);
-        //text.setPadding(padding, 2 * padding, padding, padding);
         text.setId(1);
         RelativeLayout.LayoutParams textParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         textParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
@@ -52,7 +51,6 @@ public class StudentIdActivity extends ContextActivity
         final EditText input = new EditText(this);
         input.setInputType(InputType.TYPE_CLASS_PHONE);
         input.setText(this.getDefaultInput());
-        //input.setPadding(padding, 0, padding, 0);
         input.setId(2);
         RelativeLayout.LayoutParams inputParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         inputParams.addRule(RelativeLayout.BELOW, text.getId());
