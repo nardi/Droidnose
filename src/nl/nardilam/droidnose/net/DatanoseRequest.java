@@ -1,10 +1,16 @@
 package nl.nardilam.droidnose.net;
 
-import java.net.*;
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.List;
+import java.util.Map;
+import org.apache.http.entity.mime.content.ContentBody;
 
-public abstract class DatanoseRequest
+public class DatanoseRequest
 {
 	private static final String serviceURL = "http://content.datanose.nl/Timetable.svc/";
 	
@@ -17,8 +23,6 @@ public abstract class DatanoseRequest
         this.path = path;
     }
     
-    protected abstract void connectionSetup(HttpURLConnection connection) throws IOException;
-    
     private boolean requestDone = false;
     private void doRequest() throws IOException
     {
@@ -28,7 +32,7 @@ public abstract class DatanoseRequest
             {
                 serverAddress = new URL(serviceURL + path);
                 connection = (HttpURLConnection)serverAddress.openConnection(); 
-                connectionSetup(connection);
+                connection.setRequestProperty("Accept", "application/json");
                 connection.connect();
                 requestDone = true;
             }

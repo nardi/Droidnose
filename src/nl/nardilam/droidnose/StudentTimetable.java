@@ -130,7 +130,7 @@ public class StudentTimetable extends Timetable
     			+ super.toString();
     }
     
-    public static StudentTimetable empty(int studentId) throws IOException, JSONException
+    public static StudentTimetable empty(int studentId) throws Exception
     {
     	return StudentTimetable.initialize(Student.download(studentId));
     }
@@ -146,7 +146,7 @@ public class StudentTimetable extends Timetable
 	  + " or substringof(',%1$s', Groups) eq true"
 	  + " or Groups eq ''";
     
-    protected List<Event> downloadEvents(String dateFilter) throws IOException, JSONException
+    protected List<Event> downloadEvents(String dateFilter) throws Exception
     {
     	List<Event> events = new ArrayList<Event>();
     	

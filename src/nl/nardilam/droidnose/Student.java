@@ -29,7 +29,7 @@ public class Student implements Serializable
 		this.creationTime = Time.now();
 	}
 	
-	public static Student download(int studentId) throws IOException, JSONException
+	public static Student download(int studentId) throws Exception
 	{
 		DatanoseQuery coursesByStudent = new DatanoseQuery("GetCoursesByStudent?id=" + studentId);
 		List<JSONValue> courseResults = coursesByStudent.query();
