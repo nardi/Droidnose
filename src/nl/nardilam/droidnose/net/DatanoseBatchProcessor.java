@@ -5,6 +5,22 @@ import java.util.HashMap;
 import java.util.Map;
 import nl.nardilam.droidnose.Callback;
 
+class RequestCallback implements Callback<String>
+{
+	String result = null;
+	Exception exception = null;
+	
+	public void onResult(String result)
+	{
+		this.result = result;
+	}
+
+	public void onError(Exception e)
+	{
+		this.exception = e;
+	}	
+}
+
 class DatanoseBatchProcessor
 {
 	private static final long requestDelay = 5000; //ms
@@ -25,22 +41,6 @@ class DatanoseBatchProcessor
 		lastRequestTime = System.currentTimeMillis();
 		while (System.currentTimeMillis() - lastRequestTime < requestDelay);
 		// actually make and do request
-	}
-	
-	private class RequestCallback implements Callback<String>
-	{
-		String result = null;
-		Exception exception = null;
-		
-		public void onResult(String result)
-		{
-			this.result = result;
-		}
-
-		public void onError(Exception e)
-		{
-			this.exception = e;
-		}	
 	}
 	
 	static String doRequest(String path) throws Exception

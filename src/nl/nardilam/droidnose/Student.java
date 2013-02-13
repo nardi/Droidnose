@@ -1,6 +1,5 @@
 package nl.nardilam.droidnose;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import nl.nardilam.droidnose.datetime.Time;
-import nl.nardilam.droidnose.json.JSONException;
 import nl.nardilam.droidnose.json.JSONValue;
 import nl.nardilam.droidnose.net.DatanoseQuery;
 

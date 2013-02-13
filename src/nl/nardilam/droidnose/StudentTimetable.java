@@ -14,7 +14,6 @@ import nl.nardilam.droidnose.datetime.Duration;
 import nl.nardilam.droidnose.datetime.Time;
 import nl.nardilam.droidnose.datetime.Week;
 import nl.nardilam.droidnose.datetime.WeekDay;
-import nl.nardilam.droidnose.json.JSONException;
 import nl.nardilam.droidnose.json.JSONValue;
 import nl.nardilam.droidnose.net.DatanoseQuery;
 
