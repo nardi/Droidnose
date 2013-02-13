@@ -8,7 +8,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
-import org.apache.http.entity.mime.content.ContentBody;
 
 public class DatanoseRequest
 {
@@ -26,7 +25,7 @@ public class DatanoseRequest
     private boolean requestDone = false;
     private void doRequest() throws IOException
     {
-        if (!requestDone)
+        /* if (!requestDone)
         {
             try
             {
@@ -40,6 +39,20 @@ public class DatanoseRequest
             {
                 if(connection != null)
                     connection.disconnect();
+                IOException ioException = new IOException();
+                ioException.initCause(e);
+                throw ioException;
+            }
+        } */
+    	
+    	if (!requestDone)
+        {
+            try
+            {
+                DatanoseBatchProcessor.doRequest(path);
+            }
+            catch(Exception e)
+            {
                 IOException ioException = new IOException();
                 ioException.initCause(e);
                 throw ioException;
