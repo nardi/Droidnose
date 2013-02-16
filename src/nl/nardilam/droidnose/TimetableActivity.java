@@ -180,7 +180,7 @@ public class TimetableActivity extends ContextActivity
 		super.onActivityResult(requestCode, resultCode, data);
 	}
 	
-	private MenuItem[] menuItems = new MenuItem[3];
+	private MenuItem[] menuItems = new MenuItem[4];
 	
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
@@ -227,6 +227,17 @@ public class TimetableActivity extends ContextActivity
 			}
 		});
 		this.menuItems[2] = manualRefresh;
+        
+        MenuItem feedback = menu.add("Feedback geven");
+		feedback.setOnMenuItemClickListener(new OnMenuItemClickListener()
+		{
+			public boolean onMenuItemClick(MenuItem item)
+			{
+				Intent intent = new Intent(activity, FeedbackActivity.class);
+                activity.startActivity(intent);
+			}
+		});
+		this.menuItems[3] = feedback;
 		
 		return true;
 	}
