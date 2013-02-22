@@ -1,9 +1,11 @@
 package nl.nardilam.droidnose.net;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
@@ -16,7 +18,8 @@ public class DatanoseRequest
     private HttpURLConnection connection = null;
     private URL serverAddress = null;
     private String path = null;
-
+    private String result = null;
+    
     public DatanoseRequest(String path)
     {
         this.path = path;
@@ -49,7 +52,8 @@ public class DatanoseRequest
         {
             try
             {
-                DatanoseBatchProcessor.doRequest(path);
+                this.result = DatanoseBatchProcessor.doRequest(path);
+                requestDone = true;
             }
             catch(Exception e)
             {
@@ -71,7 +75,7 @@ public class DatanoseRequest
     {
         if (!requestDone)
             doRequest();
-        return connection.getInputStream();
+        return new ByteArrayInputStream(this.result.getBytes());
     }
     
     public String getBody() throws IOException

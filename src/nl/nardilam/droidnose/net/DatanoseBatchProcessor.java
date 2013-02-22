@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import android.util.Log;
 
 import nl.nardilam.droidnose.Callback;
 
@@ -38,7 +39,7 @@ class DatanoseBatchProcessor
 	
 	private static String httpGetFromPath(String path)
 	{
-		return "GET /Timetable.svc/" + path + " HTTP/1.1\r\n"
+		return "GET " + path + " HTTP/1.1\r\n"
 			 + "Host: content.datanose.nl\r\nAccept: application/json\r\n\r\n";
 	}
 	
@@ -80,7 +81,7 @@ class DatanoseBatchProcessor
 			for (String path : paths)
 			{
 				requestBuilder.append("--" + requestBoundary + "\r\n");
-				requestBuilder.append("Content-Type: application/http \r\nContent-Transfer-Encoding:binary\r\n\r\n");
+				requestBuilder.append("Content-Type: application/http\r\nContent-Transfer-Encoding: binary\r\n\r\n");
 				requestBuilder.append(httpGetFromPath(path));
 			}
 			requestBuilder.append("--" + requestBoundary + "--\r\n");
@@ -88,6 +89,7 @@ class DatanoseBatchProcessor
 			byte[] request = requestBuilder.toString().getBytes();
 			connection.setRequestProperty("Content-Length", Integer.toString(request.length));
 			
+			Log.v("DatanoseBatchProcessor", "Sending request:\n" + requestBuilder.toString());
 			connection.connect();
 			connection.getOutputStream().write(request);
 			
@@ -105,15 +107,16 @@ class DatanoseBatchProcessor
 			String[] responses = body.split("--" + responseBoundary + "(--)*");
 			for (int i = 0; i < paths.size(); i++)
 			{
-				Callback<String> callback = requestQueue.get(paths.get(i));
+				String path = paths.get(i);
+				Callback<String> callback = requestQueue.get(path);
 				try
 				{
-					String response = responses[i];
+					String response = responses[i + 1];
 					int httpStart = response.indexOf("HTTP/");
 					if (httpStart != -1)
 					{
 						String responseContent = response.substring(httpStart);
-						String responseBody = responseContent.substring(response.indexOf("\n\n") + 2).trim();
+						String responseBody = responseContent.substring(responseContent.indexOf("\n\n") + 2).trim();
 						if (responseBody != "")
 						{
 							callback.onResult(responseBody);
@@ -128,6 +131,7 @@ class DatanoseBatchProcessor
 				{
 					callback.onError(e);
 				}
+				requestQueue.remove(path);
 			}
 		}
 	}

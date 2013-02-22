@@ -235,6 +235,7 @@ public class TimetableActivity extends ContextActivity
 			{
 				Intent intent = new Intent(activity, FeedbackActivity.class);
                 activity.startActivity(intent);
+                return true;
 			}
 		});
 		this.menuItems[3] = feedback;

@@ -177,7 +177,7 @@ public class StudentTimetable extends Timetable
 				/*
 				 * Locaties ophalen kost erg veel requests en tijd, kan
 				 * waarschijnlijk sneller als batchrequest gedaan worden
-				 */
+				 *
 				DatanoseQuery locationsByActivity = new DatanoseQuery("GetLocationsByActivity?id="
 						+ (int)activity.get("ID").asNumber());
 				List<JSONValue> locations = locationsByActivity.query();
@@ -185,7 +185,7 @@ public class StudentTimetable extends Timetable
 				for (JSONValue location : locations)
 				{
 					locationNames.add(location.asObject().get("Name").asString());
-				}
+				} */
     			
 				EventType type = EventType.parse(activity.get("ActivityType").asString());
 				
@@ -206,7 +206,7 @@ public class StudentTimetable extends Timetable
 						Double duration = activity.get("Duration").asNumber();
 						Time end = start.add(Duration.hours(duration));
 						
-						events.add(new Event(start, end, course, type, locationNames, new ArrayList<String>()));
+						events.add(new Event(start, end, course, type, /* locationNames */ new ArrayList<String>(), new ArrayList<String>()));
 					}
 				}
     		}
