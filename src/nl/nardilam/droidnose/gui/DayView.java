@@ -14,6 +14,7 @@ import nl.nardilam.droidnose.Timetable;
 import nl.nardilam.droidnose.Utils;
 import nl.nardilam.droidnose.datetime.Day;
 import android.content.Context;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -52,6 +53,7 @@ public class DayView extends TimeLayout
 	{
 		public void onResult(Timetable.DayEvents result, DayView context)
 		{
+			Log.v("DayView", "Update finished for " + day.toString());
 			context.errorUpdating = null;
 			context.update();
 		}

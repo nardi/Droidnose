@@ -13,6 +13,7 @@ public class HourView extends TimeLayout
 {
 	private static final int DEFAULT_NUM_HOURS =
 			TimeLayout.DEFAULT_ENDHOUR - TimeLayout.DEFAULT_STARTHOUR + 1;
+	private static final int MINIMUM_VIEW_HEIGHT = 600; //dp
 	
 	private final HourView hourView = this;
 	
@@ -93,16 +94,12 @@ public class HourView extends TimeLayout
 		private boolean measured = false;
 		protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec)
 		{
-			int parentWidth = MeasureSpec.getSize(widthMeasureSpec);
 			int parentHeight = MeasureSpec.getSize(heightMeasureSpec);
+			int minHeight = Utils.dpToPx(MINIMUM_VIEW_HEIGHT);
 			
 			if (!measured)
 			{
-				if (parentWidth > parentHeight)
-					hourView.setAvailableHeight(parentWidth);
-				else
-					hourView.setAvailableHeight(parentHeight);
-				
+				hourView.setAvailableHeight(Math.max(parentHeight, minHeight));
 				measured = true;
 			}
 			

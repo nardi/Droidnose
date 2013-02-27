@@ -36,27 +36,26 @@ public class StudentIdActivity extends ContextActivity
         
         int margin = Utils.dpToPx(0.02f * Utils.getDisplayMetrics().widthPixels);
         
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_PHONE);
+        input.setText(this.getDefaultInput());
+        input.setId(1);
+        RelativeLayout.LayoutParams inputParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        inputParams.addRule(RelativeLayout.CENTER_IN_PARENT);
+        inputParams.setMargins(margin, 0, margin, 0);
+        this.layout.addView(input, inputParams);
+        
         final TextView text = new TextView(this);
         text.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
         text.setText(this.getMessage());
         text.setTextSize(16);
         text.setGravity(Gravity.CENTER);
-        text.setId(1);
+        text.setId(2);
         RelativeLayout.LayoutParams textParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        textParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+        textParams.addRule(RelativeLayout.ABOVE, input.getId());
         textParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
-        textParams.setMargins(margin, margin, margin, margin);
+        textParams.setMargins(margin, 0, margin, 0);
         this.layout.addView(text, textParams);
-        
-        final EditText input = new EditText(this);
-        input.setInputType(InputType.TYPE_CLASS_PHONE);
-        input.setText(this.getDefaultInput());
-        input.setId(2);
-        RelativeLayout.LayoutParams inputParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        inputParams.addRule(RelativeLayout.BELOW, text.getId());
-        inputParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
-        inputParams.setMargins(margin, 0, margin, 0);
-        this.layout.addView(input, inputParams);
         
         Button finished = new Button(this);
         finished.setText("Klaar!");

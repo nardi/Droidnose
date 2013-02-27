@@ -38,6 +38,16 @@ public class Course implements Serializable
     		&& this.name.equals(c.name)
     		&& this.academicYear == c.academicYear;
     }
+    
+    public int hashCode()
+    {
+    	int result = (int)serialVersionUID;
+    	result = 31 * result + this.id;
+    	result = 31 * result + this.catalogNumber.hashCode();
+    	result = 31 * result + this.name.hashCode();
+    	result = 31 * result + this.academicYear;
+    	return result;
+    }
 	
 	public String toString()
 	{

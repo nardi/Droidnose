@@ -1,9 +1,9 @@
 package nl.nardilam.droidnose;
 
-import android.app.Activity; 
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 
-public class ContextActivity extends Activity
+public class ContextActivity extends FragmentActivity
 {
 	protected void onCreate(Bundle savedInstanceState)
 	{

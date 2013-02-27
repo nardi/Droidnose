@@ -6,6 +6,7 @@ import nl.nardilam.droidnose.gui.LoadingView;
 import nl.nardilam.droidnose.gui.TimetableView;
 import android.os.Bundle;
 import android.app.Activity;
+import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -13,8 +14,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.View;
+import android.widget.DatePicker;
 
-public class TimetableActivity extends ContextActivity
+public class TimetableActivity extends ContextActivity implements DatePickerDialog.OnDateSetListener
 {
 	public static final String PREFERENCES_FILE = "DroidnoseSettings";
 	public static final String STUDENTID = "StudentId";
@@ -64,11 +66,10 @@ public class TimetableActivity extends ContextActivity
 			this.tryLoadStudentId();
 		}
 	}
-	
-	@SuppressWarnings("deprecation")
+
 	private void tryRestoreState()
 	{
-		State lastState = (State)this.getLastNonConfigurationInstance();
+		State lastState = (State)this.getLastCustomNonConfigurationInstance();
 		if (lastState != null)
 			this.currentState = lastState;
 	}
@@ -156,14 +157,13 @@ public class TimetableActivity extends ContextActivity
 		settingsEditor.commit();
 	}
 	
-	protected void onActivityResult(int requestCode, int resultCode, Intent data)
+	public void onDateSet(DatePicker view, int year, int month, int day)
 	{
-		if (requestCode == ActivityRequests.DATE_REQUEST && resultCode == Activity.RESULT_OK)
-		{
-			Day day = ChooseDateActivity.createDayFromIntent(data);
-			this.showTimetableView(day);
-		}
-		
+		this.showTimetableView(new Day(year, month + 1, day, TimeUtils.CET));
+	}
+	
+	protected void onActivityResult(int requestCode, int resultCode, Intent data)
+	{		
 		if (requestCode == ActivityRequests.STUDENT_ID_REQUEST)
 		{
 			if (resultCode == Activity.RESULT_OK)
@@ -251,7 +251,7 @@ public class TimetableActivity extends ContextActivity
 		return true;
 	}
 	
-	public Object onRetainNonConfigurationInstance()
+	public Object onRetainCustomNonConfigurationInstance()
 	{
 		State currentState = this.currentState;
 		if (currentState.loader != null)

@@ -4,8 +4,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import android.content.Context;
 import android.os.AsyncTask;
 
@@ -14,7 +17,6 @@ import nl.nardilam.droidnose.datetime.Duration;
 import nl.nardilam.droidnose.datetime.Time;
 import nl.nardilam.droidnose.datetime.Week;
 import nl.nardilam.droidnose.datetime.WeekDay;
-import nl.nardilam.droidnose.json.JSONValue;
 import nl.nardilam.droidnose.net.DatanoseQuery;
 
 public class StudentTimetable extends Timetable
@@ -148,9 +150,11 @@ public class StudentTimetable extends Timetable
     protected List<Event> downloadEvents(String dateFilter) throws Exception
     {
     	List<Event> events = new ArrayList<Event>();
+    	Map<Course, String> urlList = new HashMap<Course, String>(this.student.courses.size());
+    	DatanoseQuery dnQuery = new DatanoseQuery();
     	
     	for (Course course : this.student.courses)
-    	{
+		{
     		String queryUrl = "GetActivitiesByCourse?id=" + course.id + "&$filter=";
     		boolean inGroup = this.student.groups.containsKey(course);
     		boolean hasFilter = dateFilter != null && !dateFilter.trim().equals("");
@@ -167,46 +171,54 @@ public class StudentTimetable extends Timetable
 				queryUrl += "(" + dateFilter + ")";
     		}
     		queryUrl = queryUrl.replaceAll(" ", "%20");
-    		DatanoseQuery activitiesByCourse = new DatanoseQuery(queryUrl);
-    		List<JSONValue> results = activitiesByCourse.query();
-
-    		for (JSONValue value : results)
-    		{
-				Map<String, JSONValue> activity = value.asObject();
+    		
+    		urlList.put(course, queryUrl);
+    	}
+    	
+    	Map<String, JSONArray> resultsPerCourse = dnQuery.queryAll(urlList.values());
+    	for (Course course : this.student.courses)
+		{
+			JSONArray results = resultsPerCourse.get(urlList.get(course));
+			for (int i = 0; i < results.length(); i++)
+			{
+				JSONObject activity = (JSONObject)results.get(i);
+				dnQuery.addQuery("GetLocationsByActivity?id=" + activity.getInt("ID"));
+			}
+			
+			Map<String, JSONArray> locationResults = dnQuery.query();
+			
+			for (int i = 0; i < results.length(); i++)
+			{
+				JSONObject activity = (JSONObject)results.get(i);
 				
-				/*
-				 * Locaties ophalen kost erg veel requests en tijd, kan
-				 * waarschijnlijk sneller als batchrequest gedaan worden
-				 *
-				DatanoseQuery locationsByActivity = new DatanoseQuery("GetLocationsByActivity?id="
-						+ (int)activity.get("ID").asNumber());
-				List<JSONValue> locations = locationsByActivity.query();
+				JSONArray locations = locationResults.get("GetLocationsByActivity?id=" + activity.getInt("ID"));
 				List<String> locationNames = new ArrayList<String>();
-				for (JSONValue location : locations)
+				for (int l = 0; l < locations.length(); l++)
 				{
-					locationNames.add(location.asObject().get("Name").asString());
-				} */
+					JSONObject location = (JSONObject)locations.get(l);
+					locationNames.add(location.getString("Name"));
+				}
     			
-				EventType type = EventType.parse(activity.get("ActivityType").asString());
-				
+				EventType type = EventType.parse(activity.getString("ActivityType"));
+
 				String weekPattern = activity.get("WeekPattern").toString();
 				List<Week> weekList = Timetable.calculateWeeksFromPattern(weekPattern, course.academicYear);
-				
-				int days = (int)activity.get("Day").asNumber();
+
+				int days = activity.getInt("Day");
 				List<WeekDay> dayList = Timetable.calculateDaysFromPattern(days, course.academicYear);
-								
+
 				for (Week week : weekList)
 				{
 					for (WeekDay weekDay : dayList)
 					{
 						Day day = week.getDay(weekDay);
-						int startTime = (int)activity.get("StartTime").asNumber();
+						int startTime = activity.getInt("StartTime");
 						Time start = day.startTime.add(Duration.hours(startTime));
 						
-						Double duration = activity.get("Duration").asNumber();
+						Double duration = activity.getDouble("Duration");
 						Time end = start.add(Duration.hours(duration));
 						
-						events.add(new Event(start, end, course, type, /* locationNames */ new ArrayList<String>(), new ArrayList<String>()));
+						events.add(new Event(start, end, course, type, locationNames, new ArrayList<String>()));
 					}
 				}
     		}

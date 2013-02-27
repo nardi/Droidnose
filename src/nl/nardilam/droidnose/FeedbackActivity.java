@@ -3,8 +3,6 @@ package nl.nardilam.droidnose;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -14,7 +12,11 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Typeface;
 import android.text.InputType;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.style.StyleSpan;
 import android.view.Gravity;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -23,7 +25,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.Toast;
@@ -37,13 +38,15 @@ public class FeedbackActivity extends Activity
 			+ " en wil je dit heel graag aan iedereen laten weten? Schrijf hieronder dan maar een" 
 			+ " berichtje, dan geef ik het wel door.\nOok als je wel iets op te merken hebt aan dit"
 			+ " hemels stukje programmeerwerk kan je hier wat achterlaten en krijg je zo snel mogelijk"
-			+ " bericht terug zodat je weet waarom je nu precies fout zit.";
+			+ " bericht terug zodat je tenminste weet waarom je nu precies fout zit.";
+	private static final String italicsString = "waarom";
 	
 	private final FeedbackActivity activity = this;
 	private LinearLayout layout = null;
 	private TextView messageText = null;
 	private ProgressBar loading = null;
 	private Button submit = null;
+	private LayoutParams submitParams = null;
 	
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -51,17 +54,22 @@ public class FeedbackActivity extends Activity
 		
 		int margin = Utils.dpToPx(0.02f * Utils.getDisplayMetrics().widthPixels);
 		
+		SpannableStringBuilder prettyMessage = new SpannableStringBuilder(message);
+		int italicsFrom = message.indexOf(italicsString), italicsTo = italicsFrom + italicsString.length();
+        prettyMessage.setSpan(new StyleSpan(Typeface.ITALIC), italicsFrom, italicsTo, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+		
 		this.layout = new LinearLayout(this);
+		this.layout.setOrientation(Orientation.VERTICAL);
         this.setContentView(this.layout);
         
         this.messageText = new TextView(this);
-        messageText.setText(message);
+        messageText.setText(prettyMessage);
         messageText.setTextSize(16);
-        messageText.setGravity(Gravity.CENTER);        
+        messageText.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);        
         LayoutParams textParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         textParams.weight = 0;
-        textParams.gravity = Gravity.CENTER;
-        textParams.setMargins(margin, margin, margin, margin);
+        textParams.gravity = Gravity.LEFT | Gravity.CENTER_VERTICAL;
+        textParams.setMargins(margin, margin, margin, margin/2);
         this.layout.addView(messageText, textParams);
         
         final EditText sender = new EditText(this);
@@ -69,16 +77,15 @@ public class FeedbackActivity extends Activity
         sender.setHint("Je e-mailadres (als je iets terug wilt horen)");
         LayoutParams senderParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         senderParams.weight = 0;
-        senderParams.gravity = Gravity.CENTER;
         senderParams.setMargins(margin, 0, margin, 0);
         this.layout.addView(sender, senderParams);
         
         final EditText detail = new EditText(this);
         detail.setHint("Wat wil je zeggen?");
         detail.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        detail.setGravity(Gravity.TOP);
         LayoutParams detailParams = new LayoutParams(LayoutParams.MATCH_PARENT, 0);
         detailParams.weight = 1;
-        detailParams.gravity = Gravity.CENTER;
         detailParams.setMargins(margin, 0, margin, 0);
         this.layout.addView(detail, detailParams);
         
@@ -87,8 +94,9 @@ public class FeedbackActivity extends Activity
         
         submit = new Button(this);
         submit.setText("Versturen");
-        LayoutParams submitParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        submitParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         submitParams.weight = 0;
+        submitParams.setMargins(0, 0, 0, margin);
         submitParams.gravity = Gravity.CENTER;
         
 		submit.setOnClickListener(new OnClickListener()
@@ -98,7 +106,7 @@ public class FeedbackActivity extends Activity
 				activity.hideOnScreenKeyboard(sender.getWindowToken());
 				activity.hideOnScreenKeyboard(detail.getWindowToken());
 				layout.removeView(submit);
-		        layout.addView(loading);
+		        layout.addView(loading, submitParams);
 				new FeedbackSender(sender.getText().toString(), detail.getText().toString()).execute();
 			}
 		});
@@ -144,7 +152,7 @@ public class FeedbackActivity extends Activity
 		        InputStream is = connection.getInputStream(); 
 		        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
 		        String response = reader.readLine().trim();
-		        if (response != successResponse)
+		        if (!response.equals(successResponse))
 		        	throw new Exception();
 		        else
 		        	return response;
@@ -164,10 +172,12 @@ public class FeedbackActivity extends Activity
 	    	}
 	    	else
 	    	{
+	    		messageText.setHeight(messageText.getHeight());
+	    		messageText.setGravity(Gravity.CENTER);
 	    		messageText.setText("Er ging iets mis met het versturen van je feedback.\n"
 						   		  + "Misschien moet je het later nog eens proberen?");
 	    		layout.removeView(loading);
-		        layout.addView(submit);
+		        layout.addView(submit, submitParams);
 	    	}
 	    }
 	}

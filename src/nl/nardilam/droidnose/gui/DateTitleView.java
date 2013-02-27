@@ -3,13 +3,13 @@ package nl.nardilam.droidnose.gui;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
-import nl.nardilam.droidnose.ActivityRequests;
-import nl.nardilam.droidnose.ChooseDateActivity;
+import nl.nardilam.droidnose.ChooseDateFragment;
 import nl.nardilam.droidnose.Utils;
 import nl.nardilam.droidnose.datetime.Day;
-import android.app.Activity;
+import android.app.DatePickerDialog.OnDateSetListener;
 import android.content.Context;
-import android.content.Intent;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentActivity;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.LinearLayout.LayoutParams;
@@ -48,11 +48,11 @@ public class DateTitleView extends TextView
 		{
 			public void onClick(View v)
 			{
-				if (context instanceof Activity && day != null)
+				if (context instanceof FragmentActivity && context instanceof OnDateSetListener && day != null)
 				{
-					Activity activity = (Activity)context;
-					Intent intent = ChooseDateActivity.createIntentFromDay(day, new Intent(activity, ChooseDateActivity.class));
-					activity.startActivityForResult(intent, ActivityRequests.DATE_REQUEST);
+					FragmentActivity activity = (FragmentActivity)context;
+					DialogFragment newFragment = new ChooseDateFragment(day);
+				    newFragment.show(activity.getSupportFragmentManager(), "chooseDate");
 				}
 			}
 		});		

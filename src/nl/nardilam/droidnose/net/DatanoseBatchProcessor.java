@@ -32,7 +32,7 @@ class RequestCallback implements Callback<String>
 
 class DatanoseBatchProcessor
 {
-	private static final long requestDelay = 5000; //ms
+	private static final long requestDelay = 2000; //ms
 	
 	private static Map<String, Callback<String>> requestQueue =
 			Collections.synchronizedMap(new HashMap<String, Callback<String>>());
@@ -47,6 +47,7 @@ class DatanoseBatchProcessor
 	{
 		RequestCallback request = new RequestCallback();
 		addRequest(path, request);
+        handleRequests();
 		while (request.result == null && request.exception == null);
 		if (request.result != null)
 			return request.result;
@@ -59,12 +60,13 @@ class DatanoseBatchProcessor
 	{
 		requestQueue.put(path, onResult);
 		lastRequestTime = System.currentTimeMillis();
-		while (System.currentTimeMillis() - lastRequestTime < requestDelay);
-		handleRequests();
+		Log.v("DatanoseBatchProcessor", "Added request: " + path);
 	}
 	
-	private static synchronized void handleRequests() throws Exception
+	public static synchronized void handleRequests() throws Exception
 	{
+		while (System.currentTimeMillis() - lastRequestTime < requestDelay)
+			Thread.sleep(requestDelay - (System.currentTimeMillis() - lastRequestTime));
 		if (!requestQueue.isEmpty())
 		{
 			URL serverAddress = new URL("http://content.datanose.nl/Timetable.svc/$batch");
@@ -78,8 +80,10 @@ class DatanoseBatchProcessor
 			List<String> paths = new ArrayList<String>(requestQueue.size());
 			paths.addAll(requestQueue.keySet());
 			StringBuilder requestBuilder = new StringBuilder();
+			Log.v("DatanoseBatchProcessor", "Sending request for:");
 			for (String path : paths)
 			{
+				Log.v("DatanoseBatchProcessor", path);
 				requestBuilder.append("--" + requestBoundary + "\r\n");
 				requestBuilder.append("Content-Type: application/http\r\nContent-Transfer-Encoding: binary\r\n\r\n");
 				requestBuilder.append(httpGetFromPath(path));
@@ -89,22 +93,25 @@ class DatanoseBatchProcessor
 			byte[] request = requestBuilder.toString().getBytes();
 			connection.setRequestProperty("Content-Length", Integer.toString(request.length));
 			
-			Log.v("DatanoseBatchProcessor", "Sending request:\n" + requestBuilder.toString());
 			connection.connect();
 			connection.getOutputStream().write(request);
 			
 	        BufferedReader responseReader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 	        String line;
-	        String body = "";
+	        StringBuilder bodyBuilder /* lol */ = new StringBuilder();
 	        while ((line = responseReader.readLine()) != null)
-	            body += line + "\n";
+	        {
+	            bodyBuilder.append(line);
+	            bodyBuilder.append("\n");
+	        }
+	        Log.v("DatanoseBatchProcessor", "Recieved response");
 	        
 			String contentType = connection.getHeaderField("Content-Type");
 			String responseBoundary = contentType.substring(contentType.indexOf("boundary=") + "boundary=".length());
 			
 			connection.disconnect();
 			
-			String[] responses = body.split("--" + responseBoundary + "(--)*");
+			String[] responses = bodyBuilder.toString().split("--" + responseBoundary + "(--)*");
 			for (int i = 0; i < paths.size(); i++)
 			{
 				String path = paths.get(i);
