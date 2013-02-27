@@ -17,6 +17,7 @@ import java.util.Set;
 
 import android.content.Context;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.util.Log;
 import nl.nardilam.droidnose.datetime.Day;
 import nl.nardilam.droidnose.datetime.Duration;
@@ -105,7 +106,7 @@ public abstract class Timetable implements Serializable
     	if (!daysToUpdate.isEmpty())
     	{
     		Log.v("Timetable", "Updating " + daysToUpdate.toString());
-    		new EventsDownloader(daysToUpdate, new Callback<List<Event>>()
+    		EventsDownloader ed = new EventsDownloader(daysToUpdate, new Callback<List<Event>>()
     		{
 				public void onResult(List<Event> newEvents)
 				{
@@ -158,7 +159,11 @@ public abstract class Timetable implements Serializable
 			    			callback.onError(e);
 			    	}
 				}
-    		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+    		});
+    		if (Build.VERSION.SDK_INT >= 11)
+    			ed.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+    		else
+    			ed.execute();
     	}
     }
     

@@ -25,6 +25,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.Toast;
@@ -62,9 +63,20 @@ public class FeedbackActivity extends Activity
 		this.layout.setOrientation(Orientation.VERTICAL);
         this.setContentView(this.layout);
         
+        ScrollView sv = new ScrollView(this);
+        LayoutParams scrollParams = new LayoutParams(LayoutParams.MATCH_PARENT, 0);
+        scrollParams.weight = 1;
+        //this.layout.addView(sv, scrollParams);
+        
+        LinearLayout innerLayout = new LinearLayout(this);
+		innerLayout.setOrientation(Orientation.VERTICAL);
+		LayoutParams ilParams = new LayoutParams(LayoutParams.MATCH_PARENT, 0);
+		ilParams.weight = 1;
+		sv.addView(innerLayout, ilParams);
+        
         this.messageText = new TextView(this);
         messageText.setText(prettyMessage);
-        messageText.setTextSize(16);
+        messageText.setTextSize(14);
         messageText.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);        
         LayoutParams textParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         textParams.weight = 0;
@@ -85,7 +97,7 @@ public class FeedbackActivity extends Activity
         detail.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
         detail.setGravity(Gravity.TOP);
         LayoutParams detailParams = new LayoutParams(LayoutParams.MATCH_PARENT, 0);
-        detailParams.weight = 1;
+        detailParams.weight = 0.5f;
         detailParams.setMargins(margin, 0, margin, 0);
         this.layout.addView(detail, detailParams);
         
