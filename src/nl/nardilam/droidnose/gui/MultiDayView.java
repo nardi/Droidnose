@@ -139,7 +139,8 @@ public class MultiDayView extends TimeLayout
 	{
 		if (this.dayList.isEmpty())
 		{
-			this.startDay = this.getFirstValidDay(this.startDay, 1);
+			this.startDay = getFirstValidDay(this.startDay, 1);
+			this.timetable.updateIfNeeded(onUpdate, this.startDay);
 			this.addDay(this.startDay);
 		}
 		
@@ -164,13 +165,14 @@ public class MultiDayView extends TimeLayout
 		for (int i = 0; i < amount; i++)
 		{
 			currentDay = currentDay.add(searchDirection);
-			currentDay = this.getFirstValidDay(currentDay, searchDirection);
+			currentDay = getFirstValidDay(currentDay, searchDirection);
+			this.timetable.updateIfNeeded(onUpdate, currentDay);
 			days.add(currentDay);
 		}
 		return days;
 	}
 		
-	private Day getFirstValidDay(Day fromDay, int searchDirection)
+	public static Day getFirstValidDay(Day fromDay, int searchDirection)
 	{
 		Day day = fromDay;
 		if (fromDay.getWeekDay() == WeekDay.Saturday)
@@ -182,7 +184,7 @@ public class MultiDayView extends TimeLayout
 			day = searchDirection == 1 ? fromDay.add(1) : fromDay.add(-2);
 		}
 		
-		this.timetable.updateIfNeeded(onUpdate, day);
+		
 		return day;
 		
 		/*

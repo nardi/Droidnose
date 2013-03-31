@@ -27,6 +27,7 @@ public class DayView extends TimeLayout
 	private final Day day;
 	private final HourView hourView;
 	
+	private DateTitleView dtView = null;
 	private LinkedScrollView dayScrollView = null;
 	private Exception errorUpdating = null;
 	
@@ -72,10 +73,11 @@ public class DayView extends TimeLayout
 		Context context = this.getContext();
 		int hourHeight = this.getHourHeight();
 		
-		DateTitleView dtView = new DateTitleView(context, day);
+		dtView = new DateTitleView(context, day);
 		this.addView(dtView);
 		
-		if (this.errorUpdating != null)
+		List<Event> dayEvents = this.timetable.startDuring(day, onUpdate);
+		if (this.errorUpdating != null && dayEvents.isEmpty())
 		{
 			TextView errorText = new TextView(context);
 			errorText.setText("Er is een fout opgetreden:\n\n"
@@ -98,15 +100,16 @@ public class DayView extends TimeLayout
 			this.addView(errorText);
 		}
 		else
-		{
-			List<Event> dayEvents = this.timetable.startDuring(day, onUpdate);
-			
+		{			
 			if (timetable.getUpdatingDays().contains(day))
 			{
 				this.addView(new LoadingView(context));
 			}
 			else
 			{
+				if (this.errorUpdating != null)
+					this.dtView.setError(true);
+				
 				if (dayScrollView != null)
 					dayScrollView.unlink();
 				dayScrollView = new LinkedScrollView(context);

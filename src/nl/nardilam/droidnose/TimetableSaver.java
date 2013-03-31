@@ -2,6 +2,10 @@ package nl.nardilam.droidnose;
 
 import android.os.AsyncTask;
 
+/*
+ * Dit ding lijkt een beetje overbodig, kan vervangen worden door een AsyncCall lijkt me
+ */
+
 public class TimetableSaver extends AsyncTask<Timetable, Void, Boolean>
 {
 	protected Boolean doInBackground(Timetable... arg0)

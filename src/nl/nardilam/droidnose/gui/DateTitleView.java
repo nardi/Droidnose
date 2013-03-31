@@ -24,19 +24,14 @@ public class DateTitleView extends TextView
 	private static final DateFormat dayFormat = new SimpleDateFormat("EEEE d MMMM");
 	private static final int padding = Utils.dpToPx(8);
 	
+	private final Day day;
+	
 	public DateTitleView(final Context context, final Day day)
 	{
 		super(context);
 		
-		if (day != null)
-		{
-			String dayString = day.startTime.format(dayFormat);
-			this.setText(dayString);
-		}
-		else
-		{
-			this.setText("");
-		}
+		this.day = day;
+		this.setError(false);
 		this.setTextSize(14);
 		
 		this.setPadding(0, padding, 0, padding);
@@ -56,5 +51,15 @@ public class DateTitleView extends TextView
 				}
 			}
 		});		
+	}
+	
+	public void setError(boolean error)
+	{
+		String dayString = "";
+		if (day != null)
+			dayString = day.startTime.format(dayFormat);
+		if (error)
+			dayString += " (fout bij laden)";
+		this.setText(dayString);
 	}
 }

@@ -3,6 +3,7 @@ package nl.nardilam.droidnose;
 import nl.nardilam.droidnose.datetime.Day;
 import nl.nardilam.droidnose.datetime.TimeUtils;
 import nl.nardilam.droidnose.gui.LoadingView;
+import nl.nardilam.droidnose.gui.MultiDayView;
 import nl.nardilam.droidnose.gui.TimetableView;
 import android.os.Bundle;
 import android.app.Activity;
@@ -20,6 +21,7 @@ public class TimetableActivity extends ContextActivity implements DatePickerDial
 {
 	public static final String PREFERENCES_FILE = "DroidnoseSettings";
 	public static final String STUDENTID = "StudentId";
+	public static final int preLoadDays = 6;
 	
 	// Een alias voor extra duidelijkheid in de binnenklassen
 	private final TimetableActivity activity = this;
@@ -155,6 +157,12 @@ public class TimetableActivity extends ContextActivity implements DatePickerDial
 		Editor settingsEditor = this.getSharedPreferences(PREFERENCES_FILE, MODE_PRIVATE).edit();
 		settingsEditor.putInt(STUDENTID, timetable.getStudent().id);
 		settingsEditor.commit();
+		
+		Day[] daysToLoad = new Day[preLoadDays];
+		daysToLoad[0] = startDay;
+		for (int i = 1; i < preLoadDays; i++)
+			daysToLoad[i] = MultiDayView.getFirstValidDay(daysToLoad[i-1], 1);
+		timetable.updateIfNeeded(null, daysToLoad);
 	}
 	
 	public void onDateSet(DatePicker view, int year, int month, int day)

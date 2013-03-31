@@ -1,6 +1,7 @@
 package nl.nardilam.droidnose;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -18,7 +19,12 @@ public class LocationSet implements Serializable
 	{
 		if (locations == null || locations.isEmpty())
 			locations = Collections.singleton(DEFAULT_LOCATION);
-		this.set = Collections.unmodifiableSortedSet(new TreeSet<String>(locations));
+		this.set = new TreeSet<String>(locations);
+	}
+	
+	public void add(String... locations)
+	{
+		this.set.addAll(Arrays.asList(locations));
 	}
 	
 	public String toString()

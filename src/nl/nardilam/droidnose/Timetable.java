@@ -140,7 +140,10 @@ public abstract class Timetable implements Serializable
 				    		}
 				    		
 				    		for (Callback<DayEvents> callback : callbacks)
-				    			callback.onResult(new DayEvents(day, dayEvents));
+				    		{
+				    			if (callback != null)
+				    				callback.onResult(new DayEvents(day, dayEvents));
+				    		}
 				    	}
 				    		
 				    	if (timetable.updatesInProgress.isEmpty())
@@ -156,7 +159,10 @@ public abstract class Timetable implements Serializable
 			    		timetable.updatesInProgress.remove(day);
 			    		
 			    		for (Callback<DayEvents> callback : callbacks)
-			    			callback.onError(e);
+			    		{
+		    				if (callback != null)
+		    					callback.onError(e);
+			    		}
 			    	}
 				}
     		});

@@ -46,6 +46,7 @@ public class ChooseDateFragment extends DialogFragment
 		d.setButton(DatePickerDialog.BUTTON_POSITIVE, "Klaar!", d);
 		d.setButton(Dialog.BUTTON_NEGATIVE, "Laat maar", (OnClickListener)null);
 		
+		// Dit doet niks in een DatePickerDialog volgens mij? Moet nog ff kijken
 		if (Build.VERSION.SDK_INT >= 11)
 		{
 			DatePicker datePicker = d.getDatePicker();

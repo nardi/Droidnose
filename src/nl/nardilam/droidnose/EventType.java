@@ -3,6 +3,10 @@ package nl.nardilam.droidnose;
 import java.util.*;
 import java.io.Serializable;
 
+/*
+ * Dit is heel oud, toen wist ik niet dat Java enums had
+ */
+
 public class EventType implements Serializable
 {
 	private static final long serialVersionUID = 1L;
@@ -41,6 +45,7 @@ public class EventType implements Serializable
     public final static List<EventType> allTypes = new ArrayList<EventType>();
     
     // Als we bepaalde soorten colleges willen filteren, kunnen we deze constanten gebruiken
+    // Zou je denken, maar tot nu toe (31-3-2013) wordt dit nog niet gebruikt
     public final static EventType Unknown = new EventType("");
     public final static EventType Hoorcollege = new EventType("Hoorcollege");
     public final static EventType Werkcollege = new EventType("Werkcollege");

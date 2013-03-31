@@ -37,12 +37,12 @@ public class StudentTimetable extends Timetable
         this.student = student;
     }
     
+    /*
+	 * update wordt geoverride, om eerst te controleren of de studentinformatie
+	 * niet geupdatet moet worden
+	 */
     public void update(final Callback<DayEvents> whenDone,  final List<Day> daysToUpdate)
     {
-    	/*
-    	 * Eerst controleren of de studentinformatie
-    	 * niet geupdatet moet worden
-    	 */
     	if (!this.student.creationTime.add(Duration.hours(24)).isAfter(Time.now()))
     	{    			
     		this.updateStudentInfo(new Callback<Student>()
@@ -63,6 +63,10 @@ public class StudentTimetable extends Timetable
     		super.update(whenDone, daysToUpdate);
     	}
     }
+    
+    /*
+	 * Studentinformatie updaten gebeurt nu vanaf hier, kan beter lijkt me
+	 */
     
     public void updateStudentInfo(Callback<Student> whenDone)
     {
@@ -118,9 +122,7 @@ public class StudentTimetable extends Timetable
         ObjectInputStream in = new ObjectInputStream(file);
         StudentTimetable timetable = (StudentTimetable)in.readObject();
         in.close();
-        /*
-         * Nog even een sort voor de zekerheid
-         */
+        // Nog even een sort voor de zekerheid
         timetable.sort();
         return timetable;
 	}
