@@ -32,10 +32,10 @@ class RequestCallback implements Callback<String>
 
 class DatanoseBatchProcessor
 {
-	private static final long requestDelay = 2000; //ms
+	private static final long requestDelay = 1000; //ms
 	
-	private static Map<String, Callback<String>> requestQueue =
-			Collections.synchronizedMap(new HashMap<String, Callback<String>>());
+	private static Map<String, List<Callback<String>>> requestQueue =
+			Collections.synchronizedMap(new HashMap<String, List<Callback<String>>>());
 	
 	private static String httpGetFromPath(String path)
 	{
@@ -58,15 +58,18 @@ class DatanoseBatchProcessor
 	private static long lastRequestTime = 0;
 	static void addRequest(String path, Callback<String> onResult) throws Exception
 	{
-		requestQueue.put(path, onResult);
+		if (!requestQueue.containsKey(path))
+			requestQueue.put(path, new ArrayList<Callback<String>>());
+		requestQueue.get(path).add(onResult);
 		lastRequestTime = System.currentTimeMillis();
 		Log.v("DatanoseBatchProcessor", "Added request: " + path);
 	}
 	
 	public static synchronized void handleRequests() throws Exception
 	{
-		while (System.currentTimeMillis() - lastRequestTime < requestDelay)
-			Thread.sleep(requestDelay - (System.currentTimeMillis() - lastRequestTime));
+		long waited;
+		while ((waited = System.currentTimeMillis() - lastRequestTime) < requestDelay)
+			Thread.sleep(requestDelay - waited);
 		if (!requestQueue.isEmpty())
 		{
 			URL serverAddress = new URL("http://content.datanose.nl/Timetable.svc/$batch");
@@ -115,7 +118,7 @@ class DatanoseBatchProcessor
 			for (int i = 0; i < paths.size(); i++)
 			{
 				String path = paths.get(i);
-				Callback<String> callback = requestQueue.get(path);
+				List<Callback<String>> callbackList = requestQueue.get(path);
 				try
 				{
 					String response = responses[i + 1];
@@ -124,9 +127,11 @@ class DatanoseBatchProcessor
 					{
 						String responseContent = response.substring(httpStart);
 						String responseBody = responseContent.substring(responseContent.indexOf("\n\n") + 2).trim();
-						if (responseBody != "")
+						// String.isEmpty() bestaat pas sinds API 9...
+						if (!responseBody.equals(""))
 						{
-							callback.onResult(responseBody);
+							for (Callback<String> callback : callbackList)
+								callback.onResult(responseBody);
 						}
 						else
 							throw new Exception("No HTTP response body");
@@ -136,7 +141,8 @@ class DatanoseBatchProcessor
 				}
 				catch (Exception e)
 				{
-					callback.onError(e);
+					for (Callback<String> callback : callbackList)
+						callback.onError(e);
 				}
 				requestQueue.remove(path);
 			}

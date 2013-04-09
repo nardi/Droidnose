@@ -108,6 +108,13 @@ public class Time implements Serializable, Comparable<Time>
     	return this.internalDate.equals(t.internalDate);
     }
     
+    public int hashCode()
+    {
+    	int result = (int)serialVersionUID;
+    	result = 31 * result + this.internalDate.hashCode();
+    	return result;
+    }
+    
     public boolean isBefore(Time t)
     {
     	return this.internalDate.before(t.internalDate);

@@ -65,6 +65,14 @@ public class TimePeriod implements Serializable, Comparable<TimePeriod>
     		&& this.endTime.equals(tp.endTime);
     }
     
+    public int hashCode()
+    {
+    	int result = (int)serialVersionUID;
+    	result = 31 * result + this.startTime.hashCode();
+    	result = 31 * result + this.endTime.hashCode();
+    	return result;
+    }
+    
     public boolean startsDuring(TimePeriod tp)
     {
     	return startTime.isDuring(tp);
@@ -72,7 +80,7 @@ public class TimePeriod implements Serializable, Comparable<TimePeriod>
     
     public boolean endsDuring(TimePeriod tp)
     {
-    	return endTime.isDuring(tp);
+    	return endTime.isDuring(tp) || endTime.equals(tp.endTime);
     }
     
     public boolean isDuring(TimePeriod tp)

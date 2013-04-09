@@ -73,8 +73,8 @@ public class DatanoseQuery
 				}
 			});
         }
-        DatanoseBatchProcessor.handleRequests();
-        while (results.size() < urls.size() && exception == null);
+        while (results.size() < urls.size() && exception == null)
+        	DatanoseBatchProcessor.handleRequests();
         if (exception != null)
         {
         	Exception e = exception;

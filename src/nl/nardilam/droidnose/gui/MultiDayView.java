@@ -89,9 +89,9 @@ public class MultiDayView extends TimeLayout
 		}
 	}
 	
-	private final Callback<Timetable.DayEvents> onUpdate = new Callback<Timetable.DayEvents>()
+	private final Callback<Timetable.EventCollection> onUpdate = new Callback<Timetable.EventCollection>()
 	{
-		public void onResult(Timetable.DayEvents result)
+		public void onResult(Timetable.EventCollection result)
 		{
 			/*
 			 * Check if new days need to be added to the view

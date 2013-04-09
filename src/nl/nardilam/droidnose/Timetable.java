@@ -22,20 +22,21 @@ import android.util.Log;
 import nl.nardilam.droidnose.datetime.Day;
 import nl.nardilam.droidnose.datetime.Duration;
 import nl.nardilam.droidnose.datetime.Time;
+import nl.nardilam.droidnose.datetime.TimePeriod;
 import nl.nardilam.droidnose.datetime.TimeUtils;
 import nl.nardilam.droidnose.datetime.Week;
 import nl.nardilam.droidnose.datetime.WeekDay;
 
 public abstract class Timetable implements Serializable
 {
-	public class DayEvents
+	public class EventCollection
 	{
-		public final Day day;
+		public final TimePeriod timePeriod;
 		public final List<Event> events;
 		
-		public DayEvents(Day day, List<Event> events)
+		public EventCollection(TimePeriod timePeriod, List<Event> events)
 		{
-			this.day = day;
+			this.timePeriod = timePeriod;
 			this.events = events;
 		}
 	}
@@ -47,23 +48,23 @@ public abstract class Timetable implements Serializable
 	private final Timetable timetable = this;
 	
 	private List<Event> eventList;
-	protected Map<Day, Time> updateLog;
-	private transient Map<Day, List<Callback<DayEvents>>> updatesInProgress;
+	protected Map<TimePeriod, Time> updateLog;
+	private transient Map<Day, List<Callback<EventCollection>>> updatesInProgress;
 	
     protected Timetable(List<Event> events)
     {    	
     	this.setEvents(new ArrayList<Event>(events));
-        this.updateLog = new HashMap<Day, Time>();
-        this.updatesInProgress = new HashMap<Day, List<Callback<DayEvents>>>();
+        this.updateLog = new HashMap<TimePeriod, Time>();
+        this.updatesInProgress = new HashMap<Day, List<Callback<EventCollection>>>();
     }
     
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException
     {
 	    in.defaultReadObject();
-	    this.updatesInProgress = new HashMap<Day, List<Callback<DayEvents>>>();
+	    this.updatesInProgress = new HashMap<Day, List<Callback<EventCollection>>>();
 	}
     
-    public void updateIfNeeded(Callback<DayEvents> whenDone, Day... days)
+    public void updateIfNeeded(Callback<EventCollection> whenDone, Day... days)
     {
     	if (days.length != 0)
     	{
@@ -71,7 +72,7 @@ public abstract class Timetable implements Serializable
     		ArrayList<Day> daysToUpdate = new ArrayList<Day>();
 	    	for (Day day : days)
 	    	{
-	    		Time lastUpdate = this.updateLog.get(day);
+	    		Time lastUpdate = this.getLastUpdated(day);
 	        	if ((lastUpdate == null
 	        	 || !lastUpdate.add(updateInterval).isAfter(now)))
 	        	{
@@ -83,7 +84,7 @@ public abstract class Timetable implements Serializable
 	    }
     }
     
-    protected void update(final Callback<DayEvents> whenDone, final List<Day> daysToUpdate)
+    protected void update(final Callback<EventCollection> whenDone, final List<Day> daysToUpdate)
     {    	
     	final Time updateTime = Time.now();
    		Iterator<Day> dayIterator = daysToUpdate.iterator();
@@ -97,7 +98,7 @@ public abstract class Timetable implements Serializable
 			}
 			else
 			{
-				this.updatesInProgress.put(day, new ArrayList<Callback<DayEvents>>());
+				this.updatesInProgress.put(day, new ArrayList<Callback<EventCollection>>());
 			}
 			
 			this.updatesInProgress.get(day).add(whenDone);
@@ -106,59 +107,60 @@ public abstract class Timetable implements Serializable
     	if (!daysToUpdate.isEmpty())
     	{
     		Log.v("Timetable", "Updating " + daysToUpdate.toString());
-    		EventsDownloader ed = new EventsDownloader(daysToUpdate, new Callback<List<Event>>()
+    		EventsDownloader ed = new EventsDownloader(daysToUpdate, new Callback<List<EventCollection>>()
     		{
-				public void onResult(List<Event> newEvents)
+				public void onResult(List<EventCollection> newEvents)
 				{
-					if (newEvents != null)
+					List<Event> events = new ArrayList<Event>(timetable.getEvents());
+					Iterator<Event> eventIterator = events.listIterator();
+					while (eventIterator.hasNext())
 					{
-						List<Event> events = new ArrayList<Event>(timetable.getEvents());
-						Iterator<Event> eventIterator = events.listIterator();
-						while (eventIterator.hasNext())
+						Event e = eventIterator.next();
+						for (EventCollection ec : newEvents)
 						{
-							Event e = eventIterator.next();
-				    		for (Day day : daysToUpdate)
-				    		{
-				    			if (e.startsDuring(day))
-				    				eventIterator.remove();
-				    		}
-				    	}
-				    	events.addAll(newEvents);
-				    	timetable.setEvents(events);
-				    	
-				    	for (Day day : daysToUpdate)
-				    	{
-				    		List<Callback<DayEvents>> callbacks = timetable.updatesInProgress.get(day);
-				    		timetable.updateLog.put(day, updateTime);
-				    		timetable.updatesInProgress.remove(day);
-				    		
-				    		List<Event> dayEvents = new ArrayList<Event>();
-				    		for (Event e : newEvents)
-				    		{
-				    			if (e.startsDuring(day))
-				    				dayEvents.add(e);
-				    		}
-				    		
-				    		for (Callback<DayEvents> callback : callbacks)
-				    		{
-				    			if (callback != null)
-				    				callback.onResult(new DayEvents(day, dayEvents));
-				    		}
-				    	}
-				    		
-				    	if (timetable.updatesInProgress.isEmpty())
-			    			TimetableSaver.save(timetable);
+							if (e.startsDuring(ec.timePeriod))
+								eventIterator.remove();
+						}
 					}
+					for (EventCollection ec : newEvents)
+					{
+						events.addAll(ec.events);
+						timetable.updateLog.put(ec.timePeriod, updateTime);
+					}
+					timetable.setEvents(events);
+					
+					for (Day day : daysToUpdate)
+					{
+						List<Callback<EventCollection>> callbacks = timetable.updatesInProgress.get(day);
+						timetable.updateLog.put(day, updateTime);
+						timetable.updatesInProgress.remove(day);
+						
+						List<Event> dayEvents = new ArrayList<Event>();
+						for (Event e : events)
+						{
+							if (e.startsDuring(day))
+								dayEvents.add(e);
+						}
+						
+						for (Callback<EventCollection> callback : callbacks)
+						{
+							if (callback != null)
+								callback.onResult(new EventCollection(day, dayEvents));
+						}
+					}
+						
+					if (timetable.updatesInProgress.isEmpty())
+						TimetableSaver.save(timetable);
 				}
 
 				public void onError(Exception e)
 				{
 					for (Day day : daysToUpdate)
 			    	{
-			    		List<Callback<DayEvents>> callbacks = timetable.updatesInProgress.get(day);
+			    		List<Callback<EventCollection>> callbacks = timetable.updatesInProgress.get(day);
 			    		timetable.updatesInProgress.remove(day);
 			    		
-			    		for (Callback<DayEvents> callback : callbacks)
+			    		for (Callback<EventCollection> callback : callbacks)
 			    		{
 		    				if (callback != null)
 		    					callback.onError(e);
@@ -173,25 +175,24 @@ public abstract class Timetable implements Serializable
     	}
     }
     
-    private class EventsDownloader extends AsyncTask<Void, Void, List<Event>>
+    private class EventsDownloader extends AsyncTask<Void, Void, List<EventCollection>>
     {
-    	private final Callback<List<Event>> callback;
+    	private final Callback<List<EventCollection>> callback;
     	private final List<Day> daysToUpdate;
     	private Exception fatalException = null;
     	
-    	public EventsDownloader(List<Day> daysToUpdate, Callback<List<Event>> callback)
+    	public EventsDownloader(List<Day> daysToUpdate, Callback<List<EventCollection>> callback)
     	{
     		this.daysToUpdate = daysToUpdate;
     		this.callback = callback;
     	}
     	
-		protected List<Event> doInBackground(Void... nothings)
+		protected List<EventCollection> doInBackground(Void... nothings)
 		{
-			String dateFilter = timetable.makeDateFilter(daysToUpdate);
 	    	try
 			{
 	    		Log.v("EventsDownloader", "Starting " + daysToUpdate.toString());
-				List<Event> events = timetable.downloadEvents(dateFilter);
+				List<EventCollection> events = timetable.downloadEvents(daysToUpdate);
 				Log.v("EventsDownloader", "Finished " + daysToUpdate.toString());
 				return events;
 			}
@@ -202,7 +203,7 @@ public abstract class Timetable implements Serializable
 			}
 		}
 		
-		protected void onPostExecute(List<Event> newEvents)
+		protected void onPostExecute(List<EventCollection> newEvents)
 		{
 			if (newEvents != null)
 			{
@@ -280,7 +281,7 @@ public abstract class Timetable implements Serializable
     	return weeksFilterBuilder.toString();
     }
     
-    protected abstract List<Event> downloadEvents(String dateFilter) throws Exception;
+    protected abstract List<EventCollection> downloadEvents(Collection<Day> days) throws Exception;
     
     protected void setEvents(List<Event> events)
     {
@@ -333,9 +334,15 @@ public abstract class Timetable implements Serializable
     	return Collections.unmodifiableList(this.eventList);
     }
     
-    public Map<Day, Time> getUpdateLog()
+    public Time getLastUpdated(TimePeriod tp)
     {
-    	return Collections.unmodifiableMap(this.updateLog);
+    	Time lastUpdated = null;
+    	for (TimePeriod updated : this.updateLog.keySet())
+    	{
+    		if (tp.isDuring(updated) && (lastUpdated == null || this.updateLog.get(updated).isAfter(lastUpdated)))
+    			lastUpdated = this.updateLog.get(updated);
+    	}
+    	return lastUpdated;
     }
     
     public Set<Day> getUpdatingDays()
@@ -343,9 +350,9 @@ public abstract class Timetable implements Serializable
     	return Collections.unmodifiableSet(this.updatesInProgress.keySet());
     }
     
-    public Collection<Callback<DayEvents>> getUpdateHandlers()
+    public Collection<Callback<EventCollection>> getUpdateHandlers()
     {
-    	List<Callback<DayEvents>> total = new ArrayList<Callback<DayEvents>>();
+    	List<Callback<EventCollection>> total = new ArrayList<Callback<EventCollection>>();
     	for (Day day : this.updatesInProgress.keySet())
     	{
     		total.addAll(this.updatesInProgress.get(day));
@@ -353,7 +360,7 @@ public abstract class Timetable implements Serializable
     	return total;
     }
     
-    public Collection<Callback<DayEvents>> getUpdateHandlers(Day day)
+    public Collection<Callback<EventCollection>> getUpdateHandlers(Day day)
     {
     	return Collections.unmodifiableCollection(this.updatesInProgress.get(day));
     }
@@ -363,7 +370,7 @@ public abstract class Timetable implements Serializable
     	Collections.sort(this.eventList);
     }
     
-    public List<Event> startDuring(Day day, Callback<DayEvents> whenDone)
+    public List<Event> startDuring(Day day, Callback<EventCollection> whenDone)
     {
     	this.updateIfNeeded(whenDone, day);    	
     	return this.startDuring(day);

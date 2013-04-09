@@ -278,12 +278,12 @@ public class TimetableActivity extends ContextActivity implements DatePickerDial
 	    	/*
 	    	 * Lelijke manier om oude Views te ontkoppelen
 	    	 */
-	    	for (Callback<Timetable.DayEvents> c : currentState.timetable.getUpdateHandlers())
+	    	for (Callback<Timetable.EventCollection> c : currentState.timetable.getUpdateHandlers())
 	    	{
 	    		if (c instanceof ContextCallback<?, ?>)
 	    		{
 	    			@SuppressWarnings("unchecked")
-					ContextCallback<Timetable.DayEvents, Object> cc = (ContextCallback<Timetable.DayEvents, Object>)c;
+					ContextCallback<Timetable.EventCollection, Object> cc = (ContextCallback<Timetable.EventCollection, Object>)c;
 	    			Object context = cc.getContext();
 	    			if (context instanceof View || context instanceof Activity)
 	    			{

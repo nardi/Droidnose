@@ -50,9 +50,9 @@ public class DayView extends TimeLayout
 		this.onUpdate.setContext(this);
 	}
 	
-	private final ContextCallback<Timetable.DayEvents, DayView> onUpdate = new ContextCallback<Timetable.DayEvents, DayView>()
+	private final ContextCallback<Timetable.EventCollection, DayView> onUpdate = new ContextCallback<Timetable.EventCollection, DayView>()
 	{
-		public void onResult(Timetable.DayEvents result, DayView context)
+		public void onResult(Timetable.EventCollection result, DayView context)
 		{
 			Log.v("DayView", "Update finished for " + day.toString());
 			context.errorUpdating = null;
